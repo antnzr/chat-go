@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/gin-gonic/gin"
 )
@@ -18,5 +20,5 @@ func NewUserController(us domain.UserService) UserController {
 }
 
 func (uc *userController) GetMe(c *gin.Context) {
-
+	c.JSON(http.StatusOK, gin.H{"user": 1})
 }

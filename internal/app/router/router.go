@@ -17,16 +17,18 @@ func NewAppRouter(engine *gin.Engine, controller controller.Controller) *appRout
 	}
 }
 
-func (router *appRouter) Setup() {
-	v1 := router.engine.Group("/api/v1")
+func (r *appRouter) Setup() {
+	v1 := r.engine.Group("/api/v1")
+	{
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/signup", r.controller.Auth.Signup)
+			auth.POST("/login", r.controller.Auth.Login)
+		}
 
-	auth := v1.Group("/auth")
-	{
-		auth.POST("/signup", router.controller.Auth.Signup)
-		auth.POST("/login", router.controller.Auth.Login)
-	}
-	users := v1.Group("/users")
-	{
-		users.GET("/me", router.controller.User.GetMe)
+		users := v1.Group("/users")
+		{
+			users.GET("/me", r.controller.User.GetMe)
+		}
 	}
 }

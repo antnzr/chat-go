@@ -7,6 +7,7 @@ import (
 	"github.com/antnzr/chat-go/internal/app/controller"
 	"github.com/antnzr/chat-go/internal/app/db"
 	"github.com/antnzr/chat-go/internal/app/logger"
+	"github.com/antnzr/chat-go/internal/app/middleware"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/antnzr/chat-go/internal/app/router"
 	"github.com/antnzr/chat-go/internal/app/service"
@@ -25,17 +26,20 @@ func (app *App) Run() {
 	engine := gin.Default()
 	engine.SetTrustedProxies(nil)
 	engine.Use(gin.Recovery())
+	engine.Use(middleware.ErrorHandler())
 
 	pkg.LoadEnvVars()
 	db := db.DBPool()
 
 	userRepository := repository.NewUserRepository(db)
-	store := repository.NewStore(userRepository)
+	tokenRepository := repository.NewTokneRepository(db)
+	store := repository.NewStore(userRepository, tokenRepository)
 
-	userService := service.NewUserService(store)
+	tokenService := service.NewTokenService(store)
+	userService := service.NewUserService(store, tokenService)
+
 	authController := controller.NewAuthController(userService)
 	userController := controller.NewUserController(userService)
-
 	controller := controller.NewController(authController, userController)
 
 	router := router.NewAppRouter(engine, *controller)

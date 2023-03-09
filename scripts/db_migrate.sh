@@ -18,5 +18,5 @@ export_current_user
 docker run --rm -it \
   --user $CURRENT_UID \
   --network=host \
-  -v "../internal/app/db:/db" \
+  -v $(pwd)/../internal/app/db:/db \
   amacneil/dbmate -d "/db/migrations" -u $DATABASE_URL $@

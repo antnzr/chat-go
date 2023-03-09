@@ -1,0 +1,14 @@
+@baseUrl = http://localhost:55044/api/v1
+
+# @name signup
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "antoinenaza@gmail.com",
+  "firstName": "Antonio",
+  "lastName": "Nazario",
+  "password": "abcdefg"
+}
+
+###

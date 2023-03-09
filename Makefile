@@ -6,8 +6,8 @@ run: build
 
 dev:
 	@CompileDaemon -exclude-dir=".git,migrations" \
-		-command="./bin/chatgo" \
-		-build="go build -o ./bin/chatgo" \
+		-command="./cmd/chatgo" \
+		-build="go build -o ./cmd/chatgo" \
 		-color -graceful-kill -log-prefix=false
 
 test:

@@ -9,12 +9,14 @@ import (
 type User struct {
 	Id        int       `json:"id"`
 	Email     string    `json:"email,omitempty"`
-	Password  *string   `json:"password,omitempty"`
+	Password  string    `json:"password,omitempty"`
+	FirstName *string   `json:"firstName,omitempty"`
+	LastName  *string   `json:"lastName,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
 type UserService interface {
-	Signup(dto *dto.CreateUserRequest) (*User, error)
+	Signup(dto *dto.CreateUserRequest) (*dto.Tokens, error)
 	GetMe(id int) (*User, error)
 	FindAll() ([]User, error)
 }
