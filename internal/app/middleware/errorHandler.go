@@ -18,14 +18,17 @@ func ErrorHandler() gin.HandlerFunc {
 
 		err := c.Errors.Last().Err
 		switch {
-		case errors.Is(err, errs.InvalidToken), errors.Is(err, errs.IncorrectCredentials):
+		case
+			errors.Is(err, errs.InvalidToken),
+			errors.Is(err, errs.IncorrectCredentials),
+			errors.Is(err, errs.Unauthorized):
 			c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 			return
 		case errors.Is(err, errs.ResourceNotFound):
 			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error()) // change to 500
+			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		}
 	}

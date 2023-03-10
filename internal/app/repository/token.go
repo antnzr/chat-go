@@ -37,3 +37,7 @@ func (tr *tokenRepository) Save(data *dto.CreateRefreshToken) (*domain.Token, er
 
 	return &token, nil
 }
+
+func (tr *tokenRepository) DeleteByUserId(userId int) error {
+	return nil
+}

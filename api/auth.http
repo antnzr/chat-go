@@ -25,3 +25,11 @@ Content-Type: application/json
 ###
 
 @accessToken = {{login.response.body.accessToken}}
+
+###
+
+# @name getMe
+
+GET {{baseUrl}}/users/me
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}

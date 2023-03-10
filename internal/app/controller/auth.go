@@ -17,7 +17,19 @@ type authController struct {
 type AuthController interface {
 	Signup(c *gin.Context)
 	Login(c *gin.Context)
+	Logout(c *gin.Context)
 }
+
+const (
+	localhost    = "localhost"
+	accessToken  = "accessToken"
+	refreshToken = "refreshToken"
+	isLoggedIn   = "isLoggedIn"
+	empty        = ""
+	path         = "/"
+	deleteCookie = -1
+	seconds      = 60
+)
 
 func NewAuthController(userService domain.UserService) AuthController {
 	config, _ := config.LoadConfig(".")
@@ -53,12 +65,22 @@ func (ac *authController) Login(ctx *gin.Context) {
 		return
 	}
 
-	isSecure := ac.config.GinMode != "debug"
-	ctx.SetCookie("accessToken", tokens.AccessToken, ac.config.AccessTokenMaxAge*60, "/", "localhost", isSecure, true)
-	ctx.SetCookie("refreshToken", tokens.RefreshToken, ac.config.RefreshTokenMaxAge*60, "/", "localhost", isSecure, true)
-	ctx.SetCookie("loggedIn", "true", ac.config.AccessTokenMaxAge*60, "/", "localhost", isSecure, false)
+	isSecure := ac.config.GinMode != gin.DebugMode
+	ctx.SetCookie(accessToken, tokens.AccessToken, ac.config.AccessTokenMaxAge*seconds, path, localhost, isSecure, true)
+	ctx.SetCookie(refreshToken, tokens.RefreshToken, ac.config.RefreshTokenMaxAge*seconds, path, localhost, isSecure, true)
+	ctx.SetCookie(isLoggedIn, "true", ac.config.AccessTokenMaxAge*seconds, path, localhost, isSecure, false)
 
 	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokens.AccessToken})
+}
+
+func (ac *authController) Logout(ctx *gin.Context) {
+	isSecure := ac.config.GinMode != gin.DebugMode
+
+	ctx.SetCookie(accessToken, empty, deleteCookie, path, localhost, isSecure, true)
+	ctx.SetCookie(refreshToken, empty, deleteCookie, path, localhost, isSecure, true)
+	ctx.SetCookie(isLoggedIn, empty, deleteCookie, path, localhost, isSecure, true)
+
+	ctx.Status(http.StatusOK)
 }
 
 // fmt.Errorf("%q: %w", name, ErrUserNotFound)

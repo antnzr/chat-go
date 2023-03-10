@@ -1,19 +1,24 @@
 package router
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/antnzr/chat-go/internal/app/controller"
 	"github.com/gin-gonic/gin"
 )
 
 type appRouter struct {
-	controller controller.Controller
 	engine     *gin.Engine
+	controller *controller.Controller
+	auth       gin.HandlerFunc
 }
 
-func NewAppRouter(engine *gin.Engine, controller controller.Controller) *appRouter {
+func NewAppRouter(engine *gin.Engine, controller *controller.Controller, auth gin.HandlerFunc) *appRouter {
 	return &appRouter{
 		engine:     engine,
 		controller: controller,
+		auth:       auth,
 	}
 }
 
@@ -28,7 +33,17 @@ func (r *appRouter) Setup() {
 
 		users := v1.Group("/users")
 		{
-			users.GET("/me", r.controller.User.GetMe)
+			users.GET("/me", r.auth, r.controller.User.GetMe)
 		}
 	}
+
+	r.engine.GET("/health", func(ctx *gin.Context) {
+		ctx.Status(http.StatusTeapot)
+	})
+
+	r.engine.NoRoute(func(ctx *gin.Context) {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": fmt.Sprintf("Route %s not found", ctx.Request.URL),
+		})
+	})
 }

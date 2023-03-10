@@ -19,6 +19,7 @@ func NewUserController(us domain.UserService) UserController {
 	return &userController{userService: us}
 }
 
-func (uc *userController) GetMe(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"user": 1})
+func (uc *userController) GetMe(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser").(*domain.User)
+	ctx.JSON(http.StatusOK, gin.H{"user": currentUser})
 }

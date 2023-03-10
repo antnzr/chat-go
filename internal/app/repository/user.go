@@ -83,5 +83,27 @@ func (u *userRepository) Delete(id int) error {
 }
 
 func (u *userRepository) FindById(id int) (*domain.User, error) {
-	return &domain.User{}, nil
+	conn, err := u.DB.Acquire(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	var user domain.User
+	sqlQuery := "SELECT id, email, password, first_name, last_name, created_at FROM users WHERE id = $1;"
+	row := conn.QueryRow(context.Background(), sqlQuery, id)
+
+	err = row.Scan(
+		&user.Id,
+		&user.Email,
+		&user.Password,
+		&user.FirstName,
+		&user.LastName,
+		&user.CreatedAt,
+	)
+	if err != nil {
+		return nil, errs.ResourceNotFound
+	}
+
+	return &user, nil
 }

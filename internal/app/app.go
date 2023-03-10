@@ -10,6 +10,7 @@ import (
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/antnzr/chat-go/internal/app/router"
 	"github.com/antnzr/chat-go/internal/app/service"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,6 +29,11 @@ func (app *App) Run() {
 	engine.Use(gin.Recovery())
 	engine.Use(middleware.ErrorHandler())
 
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{config.Origin}
+	corsConfig.AllowCredentials = true
+	engine.Use(cors.New(corsConfig))
+
 	db := db.DBPool(config)
 
 	userRepository := repository.NewUserRepository(db)
@@ -41,7 +47,9 @@ func (app *App) Run() {
 	userController := controller.NewUserController(userService)
 	controller := controller.NewController(authController, userController)
 
-	router := router.NewAppRouter(engine, *controller)
+	auth := middleware.Auth(tokenService, userService, config)
+
+	router := router.NewAppRouter(engine, controller, auth)
 	router.Setup()
 
 	engine.Run(fmt.Sprintf("localhost:%s", config.Port))

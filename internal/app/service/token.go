@@ -6,6 +6,7 @@ import (
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
+	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -49,6 +50,38 @@ func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) 
 		AccessToken:  accessTokenStr,
 		RefreshToken: refreshTokenStr,
 	}, nil
+}
+
+func (ts *tokenService) ValidateToken(tokenStr string, secret string) (int, error) {
+	parsedToken, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errs.InvalidToken
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return 0, errs.InvalidToken
+	}
+
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok || !parsedToken.Valid {
+		return 0, errs.InvalidToken
+	}
+
+	userId, ok := claims["sub"].(float64)
+	if !ok {
+		return 0, errs.InvalidToken
+	}
+
+	return int(userId), nil
+}
+
+func (ts *tokenService) DeleteByUser(userId int) error {
+	if err := ts.store.Token.DeleteByUserId(userId); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (ts *tokenService) createRefreshToken(user *domain.User, tokenId string) (string, error) {
