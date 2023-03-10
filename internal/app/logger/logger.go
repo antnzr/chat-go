@@ -1,8 +1,7 @@
 package logger
 
 import (
-	"os"
-
+	"github.com/antnzr/chat-go/config"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -11,7 +10,8 @@ import (
 var zapLog *zap.Logger
 
 func getLogConfig() zap.Config {
-	env := os.Getenv("GIN_MODE")
+	config, _ := config.LoadConfig(".")
+	env := config.GinMode
 	if env == gin.ReleaseMode {
 		config := zap.NewProductionConfig()
 		zapcore.TimeEncoderOfLayout("Jan _2 15:04:05.000000000")

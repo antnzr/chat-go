@@ -24,4 +24,4 @@ Content-Type: application/json
 
 ###
 
-@accessToken = {{signup.response.body.accessToken}}
+@accessToken = {{login.response.body.accessToken}}

@@ -2,16 +2,14 @@ package app
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/controller"
 	"github.com/antnzr/chat-go/internal/app/db"
-	"github.com/antnzr/chat-go/internal/app/logger"
 	"github.com/antnzr/chat-go/internal/app/middleware"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/antnzr/chat-go/internal/app/router"
 	"github.com/antnzr/chat-go/internal/app/service"
-	"github.com/antnzr/chat-go/internal/pkg"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,14 +20,15 @@ func NewApp() *App {
 }
 
 func (app *App) Run() {
-	gin.SetMode(os.Getenv("GIN_MODE"))
+	config, _ := config.LoadConfig(".")
+	gin.SetMode(config.GinMode)
+
 	engine := gin.Default()
 	engine.SetTrustedProxies(nil)
 	engine.Use(gin.Recovery())
 	engine.Use(middleware.ErrorHandler())
 
-	pkg.LoadEnvVars()
-	db := db.DBPool()
+	db := db.DBPool(config)
 
 	userRepository := repository.NewUserRepository(db)
 	tokenRepository := repository.NewTokneRepository(db)
@@ -45,7 +44,5 @@ func (app *App) Run() {
 	router := router.NewAppRouter(engine, *controller)
 	router.Setup()
 
-	port := os.Getenv("PORT")
-	engine.Run(fmt.Sprintf("localhost:%s", port))
-	logger.Info(fmt.Sprintf("App is running on port: %s", port))
+	engine.Run(fmt.Sprintf("localhost:%s", config.Port))
 }

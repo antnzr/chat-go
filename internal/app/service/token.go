@@ -1,9 +1,9 @@
 package service
 
 import (
-	"os"
 	"time"
 
+	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/repository"
@@ -12,11 +12,13 @@ import (
 )
 
 type tokenService struct {
-	store *repository.Store
+	store  *repository.Store
+	config config.Config
 }
 
 func NewTokenService(store *repository.Store) domain.TokenService {
-	return &tokenService{store}
+	config, _ := config.LoadConfig(".")
+	return &tokenService{store, config}
 }
 
 func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) {
@@ -53,10 +55,10 @@ func (ts *tokenService) createRefreshToken(user *domain.User, tokenId string) (s
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.Id,
 		"jti": tokenId,
-		"exp": time.Now().Add(time.Hour * 24 * 90).Unix(),
+		"exp": time.Now().Add(ts.config.RefreshTokenExpiresIn).Unix(),
 	})
 
-	refreshToken, err := token.SignedString([]byte(os.Getenv("JWT_REFRESH_TOKEN_SECRET")))
+	refreshToken, err := token.SignedString([]byte(ts.config.RefreshTokenSecret))
 	if err != nil {
 		return "", err
 	}
@@ -67,10 +69,10 @@ func (ts *tokenService) createRefreshToken(user *domain.User, tokenId string) (s
 func (ts *tokenService) createAccessToken(user *domain.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.Id,
-		"exp": time.Now().Add(time.Minute * 10).Unix(),
+		"exp": time.Now().Add(ts.config.AccessTokenExpiresIn).Unix(),
 	})
 
-	accessToken, err := token.SignedString([]byte(os.Getenv("JWT_ACCESS_TOKEN_SECRET")))
+	accessToken, err := token.SignedString([]byte(ts.config.AccessTokenSecret))
 	if err != nil {
 		return "", err
 	}
