@@ -9,7 +9,7 @@ export_current_user() {
 }
 
 export_db_url() {
-  if [ -z "$DATABASE_URL" ]; then export $(grep -v '^#' ../.env | xargs); fi
+  if [ -z "$DATABASE_URL" ]; then export $(grep -v '^#' $(pwd)/.env | xargs); fi
 }
 
 export_db_url
@@ -18,5 +18,5 @@ export_current_user
 docker run --rm -it \
   --user $CURRENT_UID \
   --network=host \
-  -v $(pwd)/../internal/app/db:/db \
+  -v $(pwd)/internal/app/db:/db \
   amacneil/dbmate -d "/db/migrations" -u $DATABASE_URL $@

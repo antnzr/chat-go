@@ -3,3 +3,4 @@
 .vscode
 .env
 cmd/*
+.vscode/settings.json

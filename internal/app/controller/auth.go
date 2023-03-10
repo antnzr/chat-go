@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
@@ -22,23 +23,41 @@ func NewAuthController(us domain.UserService) AuthController {
 }
 
 func (controller *authController) Signup(ctx *gin.Context) {
-	var dto dto.CreateUserRequest
+	var dto dto.SignupRequest
 	if err := ctx.Bind(&dto); err != nil {
 		ctx.Error(err)
 		return
 	}
 
-	response, err := controller.userService.Signup(&dto)
+	tokens, err := controller.userService.Signup(&dto)
 	if err != nil {
 		ctx.Error(err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"tokens": response})
+	buildResponse(ctx, tokens)
 }
 
-func (ac *authController) Login(c *gin.Context) {
+func (ac *authController) Login(ctx *gin.Context) {
+	var dto dto.LoginRequest
+	if err := ctx.Bind(&dto); err != nil {
+		ctx.Error(err)
+		return
+	}
 
+	tokens, err := ac.userService.Login(&dto)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	buildResponse(ctx, tokens)
+}
+
+func buildResponse(ctx *gin.Context, tokens *dto.Tokens) {
+	isSecure := os.Getenv("GIN_MODE") != "debug"
+	ctx.SetCookie("jwt", tokens.RefreshToken, 60*60*24, "/", "localhost", isSecure, true)
+	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokens.AccessToken})
 }
 
 // fmt.Errorf("%q: %w", name, ErrUserNotFound)

@@ -16,14 +16,16 @@ type User struct {
 }
 
 type UserService interface {
-	Signup(dto *dto.CreateUserRequest) (*dto.Tokens, error)
+	Signup(dto *dto.SignupRequest) (*dto.Tokens, error)
+	Login(dto *dto.LoginRequest) (*dto.Tokens, error)
 	GetMe(id int) (*User, error)
 	FindAll() ([]User, error)
 }
 
 type UserRepository interface {
-	Save(dto *dto.CreateUserRequest) (*User, error)
+	Save(dto *dto.SignupRequest) (*User, error)
 	FindById(id int) (*User, error)
+	FindByEmail(email string) (*User, error)
 	FindAll() ([]User, error)
 	Delete(id int) error
 }

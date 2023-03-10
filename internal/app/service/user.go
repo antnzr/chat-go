@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
+	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -16,16 +17,35 @@ func NewUserService(store *repository.Store, tokenService domain.TokenService) d
 	return &userService{store: store, tokenService: tokenService}
 }
 
-func (us *userService) Signup(requestData *dto.CreateUserRequest) (*dto.Tokens, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(requestData.Password), 10)
+func (us *userService) Signup(signupReq *dto.SignupRequest) (*dto.Tokens, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(signupReq.Password), 10)
 	if err != nil {
 		return nil, err
 	}
 
-	requestData.Password = string(hash)
-	user, err := us.store.User.Save(requestData)
+	signupReq.Password = string(hash)
+	user, err := us.store.User.Save(signupReq)
 	if err != nil {
 		return nil, err
+	}
+
+	tokens, err := us.tokenService.CreateTokenPair(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
+
+func (us *userService) Login(loginReq *dto.LoginRequest) (*dto.Tokens, error) {
+	user, err := us.store.User.FindByEmail(loginReq.Email)
+	if err != nil {
+		return nil, errs.IncorrectCredentials
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password))
+	if err != nil {
+		return nil, errs.IncorrectCredentials
 	}
 
 	tokens, err := us.tokenService.CreateTokenPair(user)

@@ -19,7 +19,7 @@ CREATE TABLE refresh_tokens (
   token TEXT NOT NULL,
   user_id int NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- migrate:down
