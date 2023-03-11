@@ -1,12 +1,15 @@
 package service
 
 import (
+	"encoding/base64"
+	"fmt"
 	"time"
 
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
+	"github.com/antnzr/chat-go/internal/app/logger"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -23,16 +26,21 @@ func NewTokenService(store *repository.Store) domain.TokenService {
 }
 
 func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) {
-	tokenId := uuid.New().String()
+	refreshTokenJti := uuid.New().String()
 
-	refreshTokenStr, err := ts.createRefreshToken(user, tokenId)
+	refreshToken, err := ts.createToken(
+		user.Id,
+		ts.config.RefreshTokenExpiresIn,
+		ts.config.RefreshTokenPrivateKey,
+		refreshTokenJti,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	tokenData := dto.CreateRefreshToken{
-		TokenId:      tokenId,
-		RefreshToken: refreshTokenStr,
+		TokenId:      refreshTokenJti,
+		RefreshToken: refreshToken,
 		UserId:       user.Id,
 	}
 
@@ -41,23 +49,39 @@ func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) 
 		return nil, err
 	}
 
-	accessTokenStr, err := ts.createAccessToken(user)
+	accessToken, err := ts.createToken(
+		user.Id,
+		ts.config.AccessTokenExpiresIn,
+		ts.config.AccessTokenPrivateKey,
+		"",
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	return &dto.Tokens{
-		AccessToken:  accessTokenStr,
-		RefreshToken: refreshTokenStr,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 
-func (ts *tokenService) ValidateToken(tokenStr string, secret string) (int, error) {
+func (ts *tokenService) ValidateToken(tokenStr string, publicKey string) (int, error) {
+	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
+	if err != nil {
+		return 0, fmt.Errorf("could not decode: %w", err)
+	}
+
+	key, err := jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
+
+	if err != nil {
+		return 0, fmt.Errorf("validate: parse key: %w", err)
+	}
+
 	parsedToken, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, errs.InvalidToken
 		}
-		return []byte(secret), nil
+		return key, nil
 	})
 
 	if err != nil {
@@ -84,31 +108,42 @@ func (ts *tokenService) DeleteByUser(userId int) error {
 	return nil
 }
 
-func (ts *tokenService) createRefreshToken(user *domain.User, tokenId string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.Id,
-		"jti": tokenId,
-		"exp": time.Now().Add(ts.config.RefreshTokenExpiresIn).Unix(),
-	})
-
-	refreshToken, err := token.SignedString([]byte(ts.config.RefreshTokenSecret))
+func (ts *tokenService) createToken(
+	payload interface{},
+	ttl time.Duration,
+	privateKey string,
+	jti string,
+) (string, error) {
+	decodedPrivateKey, err := base64.StdEncoding.DecodeString(privateKey)
 	if err != nil {
-		return "", err
+		logger.Error(fmt.Sprintf("could not decode key: %v", err))
+		return "", errs.InternalServerError
+	}
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(decodedPrivateKey)
+
+	if err != nil {
+		logger.Error(fmt.Sprintf("create: parse key: %v", err))
+		return "", errs.InternalServerError
 	}
 
-	return refreshToken, nil
-}
+	now := time.Now().UTC()
 
-func (ts *tokenService) createAccessToken(user *domain.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.Id,
-		"exp": time.Now().Add(ts.config.AccessTokenExpiresIn).Unix(),
-	})
+	claims := make(jwt.MapClaims)
+	claims["sub"] = payload
+	claims["iat"] = now.Unix()
+	claims["nbf"] = now.Unix()
+	claims["exp"] = now.Add(ttl).Unix()
 
-	accessToken, err := token.SignedString([]byte(ts.config.AccessTokenSecret))
-	if err != nil {
-		return "", err
+	if jti != "" {
+		claims["jti"] = jti
 	}
 
-	return accessToken, nil
+	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, claims).SignedString(key)
+
+	if err != nil {
+		logger.Error(fmt.Sprintf("create: sign token: %v", err))
+		return "", errs.InternalServerError
+	}
+
+	return token, nil
 }

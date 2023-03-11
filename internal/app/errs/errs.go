@@ -7,4 +7,5 @@ var (
 	ResourceNotFound     = errors.New("resource not found")
 	IncorrectCredentials = errors.New("incorrect credentials")
 	Unauthorized         = errors.New("unauthorized")
+	InternalServerError  = errors.New("internal server error")
 )

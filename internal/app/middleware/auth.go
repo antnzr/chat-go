@@ -33,7 +33,7 @@ func Auth(
 			return
 		}
 
-		userId, err := tokenService.ValidateToken(accessToken, config.AccessTokenSecret)
+		userId, err := tokenService.ValidateToken(accessToken, config.AccessTokenPublicKey)
 		if err != nil {
 			ctx.AbortWithError(http.StatusUnauthorized, err)
 			return
