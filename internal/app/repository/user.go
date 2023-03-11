@@ -7,6 +7,7 @@ import (
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -27,26 +28,26 @@ func (u *userRepository) Save(dto *dto.SignupRequest) (*domain.User, error) {
 	}
 	defer conn.Release()
 
-	var user domain.User
 	sqlQuery := `INSERT INTO users ("email", "first_name", "last_name", "password")
 		VALUES ($1, $2, $3, $4)
-		RETURNING "id", "email", "first_name", "last_name", "created_at";`
-	row := conn.QueryRow(context.Background(), sqlQuery, &dto.Email, &dto.FirstName, &dto.LastName, &dto.Password)
-
-	err = row.Scan(
-		&user.Id,
-		&user.Email,
-		&user.FirstName,
-		&user.LastName,
-		&user.CreatedAt,
+		RETURNING "id", "email", "password", "first_name", "last_name", "created_at";`
+	row := conn.QueryRow(
+		context.Background(),
+		sqlQuery,
+		&dto.Email,
+		&dto.FirstName,
+		&dto.LastName,
+		&dto.Password,
 	)
+
+	user, err := scanRowsIntoUser(row)
 	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique") {
 		return nil, errs.ResourceAlreadyExists
 	} else if err != nil {
 		return nil, errs.BadRequest
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (u *userRepository) FindByEmail(email string) (*domain.User, error) {
@@ -56,23 +57,15 @@ func (u *userRepository) FindByEmail(email string) (*domain.User, error) {
 	}
 	defer conn.Release()
 
-	var user domain.User
 	sqlQuery := "SELECT id, email, password, first_name, last_name, created_at FROM users WHERE email = $1;"
 	row := conn.QueryRow(context.Background(), sqlQuery, email)
 
-	err = row.Scan(
-		&user.Id,
-		&user.Email,
-		&user.Password,
-		&user.FirstName,
-		&user.LastName,
-		&user.CreatedAt,
-	)
+	user, err := scanRowsIntoUser(row)
 	if err != nil {
 		return nil, errs.ResourceNotFound
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (u *userRepository) FindAll() ([]domain.User, error) {
@@ -90,10 +83,20 @@ func (u *userRepository) FindById(id int) (*domain.User, error) {
 	}
 	defer conn.Release()
 
-	var user domain.User
 	sqlQuery := "SELECT id, email, password, first_name, last_name, created_at FROM users WHERE id = $1;"
 	row := conn.QueryRow(context.Background(), sqlQuery, id)
 
+	user, err := scanRowsIntoUser(row)
+	if err != nil {
+		return nil, errs.ResourceNotFound
+	}
+
+	return user, nil
+}
+
+func scanRowsIntoUser(row pgx.Row) (*domain.User, error) {
+	var user domain.User
+	var err error
 	err = row.Scan(
 		&user.Id,
 		&user.Email,
@@ -103,8 +106,7 @@ func (u *userRepository) FindById(id int) (*domain.User, error) {
 		&user.CreatedAt,
 	)
 	if err != nil {
-		return nil, errs.ResourceNotFound
+		return nil, err
 	}
-
 	return &user, nil
 }
