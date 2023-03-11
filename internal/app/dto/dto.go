@@ -17,8 +17,9 @@ type Tokens struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-type CreateRefreshToken struct {
-	TokenId      string
-	UserId       int
-	RefreshToken string
+type TokenDetails struct {
+	Token     *string
+	TokenUuid string
+	UserId    int
+	ExpiresIn *int64
 }

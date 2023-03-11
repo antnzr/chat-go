@@ -33,19 +33,18 @@ func Auth(
 			return
 		}
 
-		userId, err := tokenService.ValidateToken(accessToken, config.AccessTokenPublicKey)
+		tokenDetails, err := tokenService.ValidateToken(accessToken, config.AccessTokenPublicKey)
 		if err != nil {
 			ctx.AbortWithError(http.StatusUnauthorized, err)
 			return
 		}
 
-		user, err := userService.GetMe(userId)
+		user, err := userService.GetMe(tokenDetails.UserId)
 		if err != nil {
 			ctx.AbortWithError(http.StatusUnauthorized, errs.ResourceNotFound)
 			return
 		}
 
-		user.Password = ""
 		ctx.Set("currentUser", user)
 		ctx.Next()
 	}

@@ -26,55 +26,46 @@ func NewTokenService(store *repository.Store) domain.TokenService {
 }
 
 func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) {
-	refreshTokenJti := uuid.New().String()
-
-	refreshToken, err := ts.createToken(
+	refreshTokenDetails, err := ts.createToken(
 		user.Id,
 		ts.config.RefreshTokenExpiresIn,
 		ts.config.RefreshTokenPrivateKey,
-		refreshTokenJti,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenData := dto.CreateRefreshToken{
-		TokenId:      refreshTokenJti,
-		RefreshToken: refreshToken,
-		UserId:       user.Id,
-	}
-
-	_, err = ts.store.Token.Save(&tokenData)
+	_, err = ts.store.Token.Save(refreshTokenDetails)
 	if err != nil {
 		return nil, err
 	}
 
-	accessToken, err := ts.createToken(
+	accessTokenDetails, err := ts.createToken(
 		user.Id,
 		ts.config.AccessTokenExpiresIn,
 		ts.config.AccessTokenPrivateKey,
-		"",
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	return &dto.Tokens{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:  *accessTokenDetails.Token,
+		RefreshToken: *refreshTokenDetails.Token,
 	}, nil
 }
 
-func (ts *tokenService) ValidateToken(tokenStr string, publicKey string) (int, error) {
+func (ts *tokenService) ValidateToken(tokenStr string, publicKey string) (*dto.TokenDetails, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
-		return 0, fmt.Errorf("could not decode: %w", err)
+		logger.Error(fmt.Sprintf("could not decode: %v", err))
+		return nil, errs.InternalServerError
 	}
 
 	key, err := jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
-
 	if err != nil {
-		return 0, fmt.Errorf("validate: parse key: %w", err)
+		logger.Error(fmt.Sprintf("validate: parse key: %v", err))
+		return nil, errs.InternalServerError
 	}
 
 	parsedToken, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
@@ -85,20 +76,23 @@ func (ts *tokenService) ValidateToken(tokenStr string, publicKey string) (int, e
 	})
 
 	if err != nil {
-		return 0, errs.InvalidToken
+		return nil, errs.InvalidToken
 	}
 
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok || !parsedToken.Valid {
-		return 0, errs.InvalidToken
+		return nil, errs.InvalidToken
 	}
 
 	userId, ok := claims["sub"].(float64)
 	if !ok {
-		return 0, errs.InvalidToken
+		return nil, errs.InvalidToken
 	}
 
-	return int(userId), nil
+	return &dto.TokenDetails{
+		TokenUuid: fmt.Sprint(claims["jti"]),
+		UserId:    int(userId),
+	}, nil
 }
 
 func (ts *tokenService) DeleteByUser(userId int) error {
@@ -109,41 +103,45 @@ func (ts *tokenService) DeleteByUser(userId int) error {
 }
 
 func (ts *tokenService) createToken(
-	payload interface{},
+	userId int,
 	ttl time.Duration,
 	privateKey string,
-	jti string,
-) (string, error) {
+) (*dto.TokenDetails, error) {
+	td := &dto.TokenDetails{
+		ExpiresIn: new(int64),
+		Token:     new(string),
+	}
+
+	now := time.Now().UTC()
+	*td.ExpiresIn = now.Add(ttl).Unix()
+	td.TokenUuid = uuid.New().String()
+	td.UserId = userId
+
 	decodedPrivateKey, err := base64.StdEncoding.DecodeString(privateKey)
 	if err != nil {
 		logger.Error(fmt.Sprintf("could not decode key: %v", err))
-		return "", errs.InternalServerError
+		return nil, errs.InternalServerError
 	}
 	key, err := jwt.ParseRSAPrivateKeyFromPEM(decodedPrivateKey)
 
 	if err != nil {
 		logger.Error(fmt.Sprintf("create: parse key: %v", err))
-		return "", errs.InternalServerError
+		return nil, errs.InternalServerError
 	}
-
-	now := time.Now().UTC()
 
 	claims := make(jwt.MapClaims)
-	claims["sub"] = payload
+	claims["sub"] = td.UserId
 	claims["iat"] = now.Unix()
 	claims["nbf"] = now.Unix()
-	claims["exp"] = now.Add(ttl).Unix()
+	claims["exp"] = td.ExpiresIn
+	claims["jti"] = td.TokenUuid
 
-	if jti != "" {
-		claims["jti"] = jti
-	}
-
-	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, claims).SignedString(key)
+	*td.Token, err = jwt.NewWithClaims(jwt.SigningMethodRS256, claims).SignedString(key)
 
 	if err != nil {
 		logger.Error(fmt.Sprintf("create: sign token: %v", err))
-		return "", errs.InternalServerError
+		return nil, errs.InternalServerError
 	}
 
-	return token, nil
+	return td, nil
 }

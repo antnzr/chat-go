@@ -33,3 +33,11 @@ Content-Type: application/json
 GET {{baseUrl}}/users/me
 Content-Type: application/json
 Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
+# @name logout
+
+GET {{baseUrl}}/auth/logout
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}

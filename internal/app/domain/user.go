@@ -18,6 +18,7 @@ type User struct {
 type UserService interface {
 	Signup(dto *dto.SignupRequest) (error)
 	Login(dto *dto.LoginRequest) (*dto.Tokens, error)
+	Logout(refreshToken string) error
 	GetMe(id int) (*User, error)
 	FindAll() ([]User, error)
 }

@@ -16,10 +16,11 @@ type Token struct {
 type TokenService interface {
 	CreateTokenPair(user *User) (*dto.Tokens, error)
 	DeleteByUser(userId int) error
-	ValidateToken(tokenStr string, secret string) (int, error)
+	ValidateToken(tokenStr string, secret string) (*dto.TokenDetails, error)
 }
 
 type TokenRepository interface {
-	Save(data *dto.CreateRefreshToken) (*Token, error)
+	Save(data *dto.TokenDetails) (*Token, error)
 	DeleteByUserId(userId int) error
+	DeleteToken(id string) error
 }

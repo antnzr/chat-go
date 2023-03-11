@@ -6,6 +6,7 @@ import (
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
+	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -74,12 +75,24 @@ func (ac *authController) Login(ctx *gin.Context) {
 }
 
 func (ac *authController) Logout(ctx *gin.Context) {
-	isSecure := ac.config.GinMode != gin.DebugMode
+	refreshToken, err := ctx.Cookie("refreshToken")
+	if err != nil {
+		ctx.Error(err)
+	}
 
+	if refreshToken == "" {
+		ctx.Error(errs.Forbidden)
+	}
+
+	err = ac.userService.Logout(refreshToken)
+	if err != nil {
+		ctx.Error(err)
+	}
+
+	isSecure := ac.config.GinMode != gin.DebugMode
 	ctx.SetCookie(accessToken, empty, deleteCookie, path, localhost, isSecure, true)
 	ctx.SetCookie(refreshToken, empty, deleteCookie, path, localhost, isSecure, true)
 	ctx.SetCookie(isLoggedIn, empty, deleteCookie, path, localhost, isSecure, true)
-
 	ctx.Status(http.StatusOK)
 }
 

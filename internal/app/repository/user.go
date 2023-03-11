@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
@@ -40,10 +40,11 @@ func (u *userRepository) Save(dto *dto.SignupRequest) (*domain.User, error) {
 		&user.LastName,
 		&user.CreatedAt,
 	)
-	if err != nil {
-		return nil, err
+	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique") {
+		return nil, errs.ResourceAlreadyExists
+	} else if err != nil {
+		return nil, errs.BadRequest
 	}
-	fmt.Printf("user %v", &user)
 
 	return &user, nil
 }
