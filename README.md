@@ -15,7 +15,7 @@ postgresql, pgx
 gin
 websockets
 
-## Generate rsa key for jwt, and paste them to .env
+## Generate rsa key for jwt, and paste them to .env or use a script in a `scripts` dir
 ```sh
 ssh-keygen -t rsa -b 4096 -m PEM -f access_jwtRS256.key
 openssl rsa -in access_jwtRS256.key -pubout -outform PEM -out access_jwtRS256.key.pub
