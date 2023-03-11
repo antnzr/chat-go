@@ -21,6 +21,24 @@ func NewTokneRepository(db *pgxpool.Pool) domain.TokenRepository {
 	}
 }
 
+func (tr *tokenRepository) FindById(tokenId string) (*domain.Token, error) {
+	conn, err := tr.DB.Acquire(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	var token domain.Token
+	sqlQuery := `SELECT "id", "token", "user_id", "created_at" FROM refresh_tokens WHERE id = $1`
+	row := conn.QueryRow(context.Background(), sqlQuery, tokenId)
+
+	if err := row.Scan(&token.Id, &token.RefreshToken, &token.UserId, &token.CreatedAt); err != nil {
+		return nil, err
+	}
+
+	return &token, nil
+}
+
 func (tr *tokenRepository) Save(data *dto.TokenDetails) (*domain.Token, error) {
 	conn, err := tr.DB.Acquire(context.Background())
 	if err != nil {

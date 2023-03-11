@@ -43,7 +43,7 @@ func (app *App) Run() {
 	tokenService := service.NewTokenService(store)
 	userService := service.NewUserService(store, tokenService)
 
-	authController := controller.NewAuthController(userService)
+	authController := controller.NewAuthController(userService, tokenService)
 	userController := controller.NewUserController(userService)
 	controller := controller.NewController(authController, userController)
 

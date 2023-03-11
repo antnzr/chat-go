@@ -25,6 +25,30 @@ func NewTokenService(store *repository.Store) domain.TokenService {
 	return &tokenService{store, config}
 }
 
+func (ts *tokenService) RefreshTokenPair(refreshToken string) (*dto.Tokens, error) {
+	tokenDetails, err := ts.ValidateToken(refreshToken, ts.config.RefreshTokenPublicKey)
+	if err != nil {
+		return nil, errs.Forbidden
+	}
+
+	tokenEntity, err := ts.store.Token.FindById(tokenDetails.TokenUuid)
+	if err != nil {
+		return nil, errs.Forbidden
+	}
+
+	user, err := ts.store.User.FindById(tokenEntity.UserId)
+	if err != nil {
+		return nil, errs.Forbidden
+	}
+
+	err = ts.store.Token.DeleteToken(tokenDetails.TokenUuid)
+	if err != nil {
+		return nil, errs.Forbidden
+	}
+
+	return ts.CreateTokenPair(user)
+}
+
 func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) {
 	refreshTokenDetails, err := ts.createToken(
 		user.Id,

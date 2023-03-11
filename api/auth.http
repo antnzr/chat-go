@@ -41,3 +41,11 @@ Cookie: {{login.response.headers.Set-Cookie}}
 GET {{baseUrl}}/auth/logout
 Content-Type: application/json
 Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
+# @name refresh
+
+GET {{baseUrl}}/auth/refresh
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}

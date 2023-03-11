@@ -17,10 +17,12 @@ type TokenService interface {
 	CreateTokenPair(user *User) (*dto.Tokens, error)
 	DeleteByUser(userId int) error
 	ValidateToken(tokenStr string, secret string) (*dto.TokenDetails, error)
+	RefreshTokenPair(refreshToken string) (*dto.Tokens, error)
 }
 
 type TokenRepository interface {
 	Save(data *dto.TokenDetails) (*Token, error)
 	DeleteByUserId(userId int) error
 	DeleteToken(id string) error
+	FindById(tokenId string) (*Token, error)
 }

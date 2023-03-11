@@ -29,6 +29,7 @@ func (r *appRouter) Setup() {
 		{
 			auth.POST("/signup", r.controller.Auth.Signup)
 			auth.POST("/login", r.controller.Auth.Login)
+			auth.GET("/refresh", r.controller.Auth.Refresh)
 			auth.GET("/logout", r.auth, r.controller.Auth.Logout)
 		}
 
