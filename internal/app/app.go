@@ -41,8 +41,11 @@ func (app *App) Run() {
 	corsConfig.AllowCredentials = true
 	engine.Use(cors.New(corsConfig))
 
-	db := db.DBPool(config)
+	db, err := db.DBPool(config)
 	defer db.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	userRepository := repository.NewUserRepository(db)
 	tokenRepository := repository.NewTokneRepository(db)

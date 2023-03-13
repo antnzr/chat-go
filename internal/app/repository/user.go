@@ -24,20 +24,14 @@ func NewUserRepository(db *pgxpool.Pool) domain.UserRepository {
 	}
 }
 
-func (u *userRepository) Save(dto *dto.SignupRequest) (*domain.User, error) {
-	conn, err := u.DB.Acquire(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Release()
-
+func (u *userRepository) Save(ctx context.Context, dto *dto.SignupRequest) (*domain.User, error) {
 	sqlQuery := `
 		INSERT INTO "users" ("email", "first_name", "last_name", "password")
 		VALUES ($1, $2, $3, $4)
 		RETURNING "id", "email", "password", "first_name", "last_name", "created_at";
 	`
-	row := conn.QueryRow(
-		context.Background(),
+	row := u.DB.QueryRow(
+		ctx,
 		sqlQuery,
 		&dto.Email,
 		&dto.FirstName,
@@ -55,19 +49,13 @@ func (u *userRepository) Save(dto *dto.SignupRequest) (*domain.User, error) {
 	return user, nil
 }
 
-func (u *userRepository) FindByEmail(email string) (*domain.User, error) {
-	conn, err := u.DB.Acquire(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Release()
-
+func (u *userRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	sqlQuery := `
 		SELECT "id", "email", "password", "first_name", "last_name", "created_at"
 		FROM "users"
 		WHERE "email" = $1;
 	`
-	row := conn.QueryRow(context.Background(), sqlQuery, email)
+	row := u.DB.QueryRow(ctx, sqlQuery, email)
 
 	user, err := scanRowsIntoUser(row)
 	if err != nil {
@@ -77,13 +65,11 @@ func (u *userRepository) FindByEmail(email string) (*domain.User, error) {
 	return user, nil
 }
 
-func (u *userRepository) FindAll() ([]domain.User, error) {
+func (u *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
 	return []domain.User{}, nil
 }
 
-func (u *userRepository) Delete(id int) error {
-	ctx := context.Background()
-
+func (u *userRepository) Delete(ctx context.Context, id int) error {
 	switch _, err := u.DB.Exec(ctx, `DELETE FROM "users" WHERE "id" = $1`, id); {
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
 		return err
@@ -97,19 +83,13 @@ func (u *userRepository) Delete(id int) error {
 	return nil
 }
 
-func (u *userRepository) FindById(id int) (*domain.User, error) {
-	conn, err := u.DB.Acquire(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Release()
-
+func (u *userRepository) FindById(ctx context.Context, id int) (*domain.User, error) {
 	sqlQuery := `
 		SELECT "id", "email", "password", "first_name", "last_name", "created_at"
 		FROM "users"
 		WHERE "id" = $1;
 	`
-	row := conn.QueryRow(context.Background(), sqlQuery, id)
+	row := u.DB.QueryRow(ctx, sqlQuery, id)
 
 	user, err := scanRowsIntoUser(row)
 	if err != nil {
@@ -119,13 +99,7 @@ func (u *userRepository) FindById(id int) (*domain.User, error) {
 	return user, nil
 }
 
-func (u *userRepository) Update(userId int, dto *dto.UserUpdateRequest) (*domain.User, error) {
-	conn, err := u.DB.Acquire(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Release()
-
+func (u *userRepository) Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*domain.User, error) {
 	const sqlQuery = `
 		UPDATE "users" SET
 			"first_name" = COALESCE(NULLIF($1, NULL), "first_name"),
@@ -133,7 +107,7 @@ func (u *userRepository) Update(userId int, dto *dto.UserUpdateRequest) (*domain
 		WHERE "id" = $3
 		RETURNING "id", "email", "password", "first_name", "last_name", "created_at";
 	`
-	row := conn.QueryRow(context.Background(), sqlQuery, dto.FirstName, dto.LastName, userId)
+	row := u.DB.QueryRow(ctx, sqlQuery, dto.FirstName, dto.LastName, userId)
 	user, err := scanRowsIntoUser(row)
 	if err != nil {
 		return nil, errs.ResourceNotFound

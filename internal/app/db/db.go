@@ -2,18 +2,27 @@ package db
 
 import (
 	"context"
-	"fmt"
-	"os"
+	"sync"
 
 	"github.com/antnzr/chat-go/config"
+	"github.com/antnzr/chat-go/internal/app/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
-func DBPool(config config.Config) *pgxpool.Pool {
-	db, err := pgxpool.New(context.Background(), config.DatabaseURL)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
-		os.Exit(1)
-	}
-	return db
+var (
+	pgInstance *pgxpool.Pool
+	pgOnce     sync.Once
+)
+
+func DBPool(config config.Config) (*pgxpool.Pool, error) {
+	pgOnce.Do(func() {
+		db, err := pgxpool.New(context.Background(), config.DatabaseURL)
+		if err != nil {
+			logger.Error("unable to create connection pool: %w", zap.Error(err))
+			return
+		}
+		pgInstance = db
+	})
+	return pgInstance, nil
 }

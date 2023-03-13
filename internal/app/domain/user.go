@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/antnzr/chat-go/internal/app/dto"
@@ -16,20 +17,20 @@ type User struct {
 }
 
 type UserService interface {
-	Signup(dto *dto.SignupRequest) (error)
-	Login(dto *dto.LoginRequest) (*dto.Tokens, error)
-	Logout(refreshToken string) error
-	Update(userId int, dto *dto.UserUpdateRequest) (*User, error)
-	Delete(userId int) error
-	GetMe(id int) (*User, error)
-	FindAll() ([]User, error)
+	Signup(ctx context.Context, dto *dto.SignupRequest) error
+	Login(ctx context.Context, dto *dto.LoginRequest) (*dto.Tokens, error)
+	Logout(ctx context.Context, refreshToken string) error
+	Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*User, error)
+	Delete(ctx context.Context, userId int) error
+	GetMe(ctx context.Context, id int) (*User, error)
+	FindAll(ctx context.Context) ([]User, error)
 }
 
 type UserRepository interface {
-	Save(dto *dto.SignupRequest) (*User, error)
-	Update(userId int, dto *dto.UserUpdateRequest) (*User, error)
-	FindById(id int) (*User, error)
-	FindByEmail(email string) (*User, error)
-	FindAll() ([]User, error)
-	Delete(id int) error
+	Save(ctx context.Context, dto *dto.SignupRequest) (*User, error)
+	Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*User, error)
+	FindById(ctx context.Context, id int) (*User, error)
+	FindByEmail(ctx context.Context, email string) (*User, error)
+	Delete(ctx context.Context, id int) error
+	FindAll(ctx context.Context) ([]User, error)
 }

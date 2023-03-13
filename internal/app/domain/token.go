@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/antnzr/chat-go/internal/app/dto"
@@ -14,15 +15,15 @@ type Token struct {
 }
 
 type TokenService interface {
-	CreateTokenPair(user *User) (*dto.Tokens, error)
-	DeleteByUser(userId int) error
-	ValidateToken(tokenStr string, secret string) (*dto.TokenDetails, error)
-	RefreshTokenPair(refreshToken string) (*dto.Tokens, error)
+	CreateTokenPair(ctx context.Context, user *User) (*dto.Tokens, error)
+	DeleteByUser(ctx context.Context, userId int) error
+	ValidateToken(ctx context.Context, tokenStr string, secret string) (*dto.TokenDetails, error)
+	RefreshTokenPair(ctx context.Context, refreshToken string) (*dto.Tokens, error)
 }
 
 type TokenRepository interface {
-	Save(data *dto.TokenDetails) (*Token, error)
-	DeleteByUserId(userId int) error
-	DeleteToken(id string) error
-	FindById(tokenId string) (*Token, error)
+	Save(ctx context.Context, data *dto.TokenDetails) (*Token, error)
+	DeleteByUserId(ctx context.Context, userId int) error
+	DeleteToken(ctx context.Context, id string) error
+	FindById(ctx context.Context, tokenId string) (*Token, error)
 }

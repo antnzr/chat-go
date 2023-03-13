@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"time"
@@ -25,31 +26,31 @@ func NewTokenService(store *repository.Store) domain.TokenService {
 	return &tokenService{store, config}
 }
 
-func (ts *tokenService) RefreshTokenPair(refreshToken string) (*dto.Tokens, error) {
-	tokenDetails, err := ts.ValidateToken(refreshToken, ts.config.RefreshTokenPublicKey)
+func (ts *tokenService) RefreshTokenPair(ctx context.Context, refreshToken string) (*dto.Tokens, error) {
+	tokenDetails, err := ts.ValidateToken(ctx, refreshToken, ts.config.RefreshTokenPublicKey)
 	if err != nil {
 		return nil, errs.Forbidden
 	}
 
-	tokenEntity, err := ts.store.Token.FindById(tokenDetails.TokenUuid)
+	tokenEntity, err := ts.store.Token.FindById(ctx, tokenDetails.TokenUuid)
 	if err != nil {
 		return nil, errs.Forbidden
 	}
 
-	user, err := ts.store.User.FindById(tokenEntity.UserId)
+	user, err := ts.store.User.FindById(ctx, tokenEntity.UserId)
 	if err != nil {
 		return nil, errs.Forbidden
 	}
 
-	err = ts.store.Token.DeleteToken(tokenDetails.TokenUuid)
+	err = ts.store.Token.DeleteToken(ctx, tokenDetails.TokenUuid)
 	if err != nil {
 		return nil, errs.Forbidden
 	}
 
-	return ts.CreateTokenPair(user)
+	return ts.CreateTokenPair(ctx, user)
 }
 
-func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) {
+func (ts *tokenService) CreateTokenPair(ctx context.Context, user *domain.User) (*dto.Tokens, error) {
 	refreshTokenDetails, err := ts.createToken(
 		user.Id,
 		ts.config.RefreshTokenExpiresIn,
@@ -59,7 +60,7 @@ func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) 
 		return nil, err
 	}
 
-	_, err = ts.store.Token.Save(refreshTokenDetails)
+	_, err = ts.store.Token.Save(ctx, refreshTokenDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func (ts *tokenService) CreateTokenPair(user *domain.User) (*dto.Tokens, error) 
 	}, nil
 }
 
-func (ts *tokenService) ValidateToken(tokenStr string, publicKey string) (*dto.TokenDetails, error) {
+func (ts *tokenService) ValidateToken(ctx context.Context, tokenStr string, publicKey string) (*dto.TokenDetails, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
 		logger.Error(fmt.Sprintf("could not decode: %v", err))
@@ -119,8 +120,8 @@ func (ts *tokenService) ValidateToken(tokenStr string, publicKey string) (*dto.T
 	}, nil
 }
 
-func (ts *tokenService) DeleteByUser(userId int) error {
-	if err := ts.store.Token.DeleteByUserId(userId); err != nil {
+func (ts *tokenService) DeleteByUser(ctx context.Context, userId int) error {
+	if err := ts.store.Token.DeleteByUserId(ctx, userId); err != nil {
 		return err
 	}
 	return nil

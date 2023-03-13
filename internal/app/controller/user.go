@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
@@ -34,7 +35,7 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
-	updated, err := uc.userService.Update(currentUser.Id, &dto)
+	updated, err := uc.userService.Update(context.Background(), currentUser.Id, &dto)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -46,7 +47,7 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 func (uc *userController) DeleteUser(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
 
-	err := uc.userService.Delete(currentUser.Id)
+	err := uc.userService.Delete(context.Background(), currentUser.Id)
 	if err != nil {
 		ctx.Error(err)
 		return

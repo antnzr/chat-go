@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
@@ -20,11 +22,11 @@ func NewUserService(store *repository.Store, tokenService domain.TokenService) d
 	return &userService{store, config, tokenService}
 }
 
-func (us *userService) Signup(signupReq *dto.SignupRequest) error {
+func (us *userService) Signup(ctx context.Context, signupReq *dto.SignupRequest) error {
 	hash := utils.HashPassword(signupReq.Password)
 
 	signupReq.Password = hash
-	_, err := us.store.User.Save(signupReq)
+	_, err := us.store.User.Save(ctx, signupReq)
 	if err != nil {
 		return err
 	}
@@ -32,8 +34,8 @@ func (us *userService) Signup(signupReq *dto.SignupRequest) error {
 	return nil
 }
 
-func (us *userService) Login(loginReq *dto.LoginRequest) (*dto.Tokens, error) {
-	user, err := us.store.User.FindByEmail(loginReq.Email)
+func (us *userService) Login(ctx context.Context, loginReq *dto.LoginRequest) (*dto.Tokens, error) {
+	user, err := us.store.User.FindByEmail(ctx, loginReq.Email)
 	if err != nil {
 		return nil, errs.IncorrectCredentials
 	}
@@ -43,7 +45,7 @@ func (us *userService) Login(loginReq *dto.LoginRequest) (*dto.Tokens, error) {
 		return nil, errs.IncorrectCredentials
 	}
 
-	tokens, err := us.tokenService.CreateTokenPair(user)
+	tokens, err := us.tokenService.CreateTokenPair(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +53,13 @@ func (us *userService) Login(loginReq *dto.LoginRequest) (*dto.Tokens, error) {
 	return tokens, nil
 }
 
-func (us *userService) Logout(refreshToken string) error {
-	tokenClaims, err := us.tokenService.ValidateToken(refreshToken, us.config.RefreshTokenPublicKey)
+func (us *userService) Logout(ctx context.Context, refreshToken string) error {
+	tokenClaims, err := us.tokenService.ValidateToken(ctx, refreshToken, us.config.RefreshTokenPublicKey)
 	if err != nil {
 		return errs.Forbidden
 	}
 
-	err = us.store.Token.DeleteToken(tokenClaims.TokenUuid)
+	err = us.store.Token.DeleteToken(ctx, tokenClaims.TokenUuid)
 	if err != nil {
 		return errs.Forbidden
 	}
@@ -65,8 +67,8 @@ func (us *userService) Logout(refreshToken string) error {
 	return nil
 }
 
-func (us *userService) GetMe(id int) (*domain.User, error) {
-	user, err := us.store.User.FindById(id)
+func (us *userService) GetMe(ctx context.Context, id int) (*domain.User, error) {
+	user, err := us.store.User.FindById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -75,8 +77,8 @@ func (us *userService) GetMe(id int) (*domain.User, error) {
 	return user, nil
 }
 
-func (us *userService) Update(userId int, dto *dto.UserUpdateRequest) (*domain.User, error) {
-	user, err := us.store.User.Update(userId, dto)
+func (us *userService) Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*domain.User, error) {
+	user, err := us.store.User.Update(ctx, userId, dto)
 	if err != nil {
 		return nil, err
 	}
@@ -85,10 +87,10 @@ func (us *userService) Update(userId int, dto *dto.UserUpdateRequest) (*domain.U
 	return user, nil
 }
 
-func (us *userService) Delete(userId int) error {
-	return us.store.User.Delete(userId)
+func (us *userService) Delete(ctx context.Context, userId int) error {
+	return us.store.User.Delete(ctx, userId)
 }
 
-func (us *userService) FindAll() ([]domain.User, error) {
-	return us.store.User.FindAll()
+func (us *userService) FindAll(ctx context.Context) ([]domain.User, error) {
+	return us.store.User.FindAll(ctx)
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/antnzr/chat-go/config"
@@ -46,7 +47,7 @@ func (controller *authController) Signup(ctx *gin.Context) {
 		return
 	}
 
-	err := controller.userService.Signup(&dto)
+	err := controller.userService.Signup(context.Background(), &dto)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -62,7 +63,7 @@ func (ac *authController) Login(ctx *gin.Context) {
 		return
 	}
 
-	tokens, err := ac.userService.Login(&dto)
+	tokens, err := ac.userService.Login(context.Background(), &dto)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -81,7 +82,7 @@ func (ac *authController) Logout(ctx *gin.Context) {
 		ctx.Error(errs.Forbidden)
 	}
 
-	err = ac.userService.Logout(refreshToken)
+	err = ac.userService.Logout(context.Background(), refreshToken)
 	if err != nil {
 		ctx.Error(err)
 	}
@@ -103,7 +104,7 @@ func (ac *authController) Refresh(ctx *gin.Context) {
 		ctx.Error(errs.Forbidden)
 	}
 
-	tokens, err := ac.tokenService.RefreshTokenPair(refreshToken)
+	tokens, err := ac.tokenService.RefreshTokenPair(ctx, refreshToken)
 	if err != nil {
 		ctx.Error(err)
 		return
