@@ -128,8 +128,8 @@ func (u *userRepository) Update(userId int, dto *dto.UserUpdateRequest) (*domain
 
 	const sqlQuery = `
 		UPDATE "users" SET
-			"first_name" = COALESCE(NULLIF($1,''), "first_name"),
-			"last_name" = COALESCE(NULLIF($2,''), "last_name")
+			"first_name" = COALESCE(NULLIF($1, NULL), "first_name"),
+			"last_name" = COALESCE(NULLIF($2, NULL), "last_name")
 		WHERE "id" = $3
 		RETURNING "id", "email", "password", "first_name", "last_name", "created_at";
 	`
