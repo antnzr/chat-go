@@ -2,6 +2,10 @@ package app
 
 import (
 	"fmt"
+	"time"
+
+	ginzap "github.com/gin-contrib/zap"
+	"go.uber.org/zap"
 
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/controller"
@@ -24,10 +28,13 @@ func (app *App) Run() {
 	config, _ := config.LoadConfig(".")
 	gin.SetMode(config.GinMode)
 
-	engine := gin.Default()
+	engine := gin.New()
 	engine.SetTrustedProxies(nil)
-	engine.Use(gin.Recovery())
 	engine.Use(middleware.ErrorHandler())
+
+	logger, _ := zap.NewProduction()
+	engine.Use(ginzap.Ginzap(logger, time.RFC3339Nano, true))
+	engine.Use(ginzap.RecoveryWithZap(logger, true))
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{config.Origin}
