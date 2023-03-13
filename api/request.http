@@ -59,5 +59,14 @@ Content-Type: application/json
 Cookie: {{login.response.headers.Set-Cookie}}
 
 {
-  "firstName": "Naz"
+  "firstName": "Naz",
+  "lastName": "Ant"
 }
+
+###
+
+# @name deleteUser
+
+DELETE  {{baseUrl}}/users
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}

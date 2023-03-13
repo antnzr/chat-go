@@ -20,6 +20,7 @@ type UserService interface {
 	Login(dto *dto.LoginRequest) (*dto.Tokens, error)
 	Logout(refreshToken string) error
 	Update(userId int, dto *dto.UserUpdateRequest) (*User, error)
+	Delete(userId int) error
 	GetMe(id int) (*User, error)
 	FindAll() ([]User, error)
 }

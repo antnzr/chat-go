@@ -85,6 +85,10 @@ func (us *userService) Update(userId int, dto *dto.UserUpdateRequest) (*domain.U
 	return user, nil
 }
 
+func (us *userService) Delete(userId int) error {
+	return us.store.User.Delete(userId)
+}
+
 func (us *userService) FindAll() ([]domain.User, error) {
 	return us.store.User.FindAll()
 }

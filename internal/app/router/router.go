@@ -37,6 +37,7 @@ func (r *appRouter) Setup() {
 		{
 			users.GET("/me", r.auth, r.controller.User.GetMe)
 			users.PATCH("/", r.auth, r.controller.User.UpdateUser)
+			users.DELETE("/", r.auth, r.controller.User.DeleteUser)
 		}
 	}
 

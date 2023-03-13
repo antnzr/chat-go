@@ -15,6 +15,7 @@ type userController struct {
 type UserController interface {
 	GetMe(c *gin.Context)
 	UpdateUser(ctx *gin.Context)
+	DeleteUser(ctx *gin.Context)
 }
 
 func NewUserController(us domain.UserService) UserController {
@@ -40,4 +41,16 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"user": updated})
+}
+
+func (uc *userController) DeleteUser(ctx *gin.Context) {
+	currentUser := ctx.MustGet("currentUser").(*domain.User)
+
+	err := uc.userService.Delete(currentUser.Id)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	ctx.Status(http.StatusOK)
 }
