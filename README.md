@@ -3,6 +3,7 @@
 | RESOURCE | HTTP METHOD | ROUTE                | DESCRIPTION                |
 | -------- | ----------- | -------------------- | -------------------------- |
 | users    | GET         | /api/v1/users/me     | Get me                     |
+| users    | PATCH       | /api/v1/users        | Update user                |
 | auth     | POST        | /api/v1/auth/signup  | Register a new user        |
 | auth     | POST        | /api/v1/auth/login   | Login user                 |
 | auth     | GET         | /api/v1/auth/refresh | Request the new token pair |

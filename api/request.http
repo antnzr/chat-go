@@ -28,14 +28,6 @@ Content-Type: application/json
 
 ###
 
-# @name getMe
-
-GET {{baseUrl}}/users/me
-Content-Type: application/json
-Cookie: {{login.response.headers.Set-Cookie}}
-
-###
-
 # @name logout
 
 GET {{baseUrl}}/auth/logout
@@ -49,3 +41,23 @@ Cookie: {{login.response.headers.Set-Cookie}}
 GET {{baseUrl}}/auth/refresh
 Content-Type: application/json
 Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
+# @name getMe
+
+GET {{baseUrl}}/users/me
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
+# @name updateUser
+
+PATCH {{baseUrl}}/users
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}
+
+{
+  "firstName": "Naz"
+}

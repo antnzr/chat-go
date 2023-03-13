@@ -75,6 +75,16 @@ func (us *userService) GetMe(id int) (*domain.User, error) {
 	return user, nil
 }
 
+func (us *userService) Update(userId int, dto *dto.UserUpdateRequest) (*domain.User, error) {
+	user, err := us.store.User.Update(userId, dto)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = ""
+	return user, nil
+}
+
 func (us *userService) FindAll() ([]domain.User, error) {
 	return us.store.User.FindAll()
 }

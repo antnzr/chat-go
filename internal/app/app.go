@@ -42,6 +42,7 @@ func (app *App) Run() {
 	engine.Use(cors.New(corsConfig))
 
 	db := db.DBPool(config)
+	defer db.Close()
 
 	userRepository := repository.NewUserRepository(db)
 	tokenRepository := repository.NewTokneRepository(db)

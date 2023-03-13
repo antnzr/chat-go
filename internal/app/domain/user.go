@@ -19,12 +19,14 @@ type UserService interface {
 	Signup(dto *dto.SignupRequest) (error)
 	Login(dto *dto.LoginRequest) (*dto.Tokens, error)
 	Logout(refreshToken string) error
+	Update(userId int, dto *dto.UserUpdateRequest) (*User, error)
 	GetMe(id int) (*User, error)
 	FindAll() ([]User, error)
 }
 
 type UserRepository interface {
 	Save(dto *dto.SignupRequest) (*User, error)
+	Update(userId int, dto *dto.UserUpdateRequest) (*User, error)
 	FindById(id int) (*User, error)
 	FindByEmail(email string) (*User, error)
 	FindAll() ([]User, error)

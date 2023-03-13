@@ -28,9 +28,9 @@ func (u *userRepository) Save(dto *dto.SignupRequest) (*domain.User, error) {
 	}
 	defer conn.Release()
 
-	sqlQuery := `INSERT INTO users ("email", "first_name", "last_name", "password")
+	sqlQuery := `INSERT INTO users (email, first_name, last_name, password)
 		VALUES ($1, $2, $3, $4)
-		RETURNING "id", "email", "password", "first_name", "last_name", "created_at";`
+		RETURNING id, email, password, first_name, last_name, created_at;`
 	row := conn.QueryRow(
 		context.Background(),
 		sqlQuery,
@@ -86,6 +86,29 @@ func (u *userRepository) FindById(id int) (*domain.User, error) {
 	sqlQuery := "SELECT id, email, password, first_name, last_name, created_at FROM users WHERE id = $1;"
 	row := conn.QueryRow(context.Background(), sqlQuery, id)
 
+	user, err := scanRowsIntoUser(row)
+	if err != nil {
+		return nil, errs.ResourceNotFound
+	}
+
+	return user, nil
+}
+
+func (u *userRepository) Update(userId int, dto *dto.UserUpdateRequest) (*domain.User, error) {
+	conn, err := u.DB.Acquire(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	const sqlQuery = `
+		UPDATE users SET
+			first_name = COALESCE(NULLIF($1,''), first_name),
+			last_name = COALESCE(NULLIF($2,''), last_name)
+		WHERE id = $3
+		RETURNING id, email, password, first_name, last_name, created_at;
+	`
+	row := conn.QueryRow(context.Background(), sqlQuery, dto.FirstName, dto.LastName, userId)
 	user, err := scanRowsIntoUser(row)
 	if err != nil {
 		return nil, errs.ResourceNotFound

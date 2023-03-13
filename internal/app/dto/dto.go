@@ -7,6 +7,11 @@ type SignupRequest struct {
 	LastName  string `json:"lastName,omitempty"`
 }
 
+type UserUpdateRequest struct {
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
+}
+
 type LoginRequest struct {
 	Email    string `json:"email,omitempty" binding:"required"`
 	Password string `json:"password,omitempty" binding:"required"`
