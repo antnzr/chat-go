@@ -8,11 +8,11 @@ import (
 )
 
 type Config struct {
-	GinMode     string `mapstructure:"GIN_MODE"`
-	Port        string `mapstructure:"PORT"`
-	Origin      string `mapstructure:"ORIGIN"`
-	DatabaseURL string `mapstructure:"DATABASE_URL"`
-
+	GinMode                string        `mapstructure:"GIN_MODE"`
+	Port                   string        `mapstructure:"PORT"`
+	Origin                 []string      `mapstructure:"ORIGIN"`
+	DatabaseURL            string        `mapstructure:"DATABASE_URL"`
+	PgLogLevel             string        `mapstructure:"PGX_LOG_LEVEL"`
 	AccessTokenPrivateKey  string        `mapstructure:"ACCESS_TOKEN_PRIVATE_KEY"`
 	AccessTokenPublicKey   string        `mapstructure:"ACCESS_TOKEN_PUBLIC_KEY"`
 	AccessTokenExpiresIn   time.Duration `mapstructure:"ACCESS_TOKEN_EXPIRED_IN"`
