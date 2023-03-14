@@ -2,11 +2,13 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/logger"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 	"go.uber.org/zap"
@@ -82,4 +84,41 @@ func (l *PGXStdLogger) Log(ctx context.Context, level tracelog.LogLevel, msg str
 		args = append(args, fmt.Sprintf("%s=%v", k, v))
 	}
 	logger.Info(fmt.Sprintln(args...))
+}
+
+func PgErrors(err error) error {
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) {
+		return err
+	}
+	return fmt.Errorf(`%w
+		Code: %v
+		Detail: %v
+		Hint: %v
+		Position: %v
+		InternalPosition: %v
+		InternalQuery: %v
+		Where: %v
+		SchemaName: %v
+		TableName: %v
+		ColumnName: %v
+		DataTypeName: %v
+		ConstraintName: %v
+		File: %v:%v
+		Routine: %v`,
+		err,
+		pgErr.Code,
+		pgErr.Detail,
+		pgErr.Hint,
+		pgErr.Position,
+		pgErr.InternalPosition,
+		pgErr.InternalQuery,
+		pgErr.Where,
+		pgErr.SchemaName,
+		pgErr.TableName,
+		pgErr.ColumnName,
+		pgErr.DataTypeName,
+		pgErr.ConstraintName,
+		pgErr.File, pgErr.Line,
+		pgErr.Routine)
 }

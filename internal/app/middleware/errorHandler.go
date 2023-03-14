@@ -27,16 +27,17 @@ func ErrorHandler() gin.HandlerFunc {
 		case errors.Is(err, errs.Forbidden):
 			c.AbortWithStatusJSON(http.StatusForbidden, err.Error())
 			return
-		case
-			errors.Is(err, errs.BadRequest),
-			errors.Is(err, errs.ResourceNotFound):
-			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
-			return
 		case errors.Is(err, errs.ResourceAlreadyExists):
 			c.AbortWithStatusJSON(http.StatusConflict, err.Error())
 			return
 		case errors.Is(err, errs.InternalServerError):
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
+			return
+		case
+			errors.Is(err, errs.BadRequest),
+			errors.Is(err, errs.ResourceNotFound),
+			errors.Is(err, errs.DbError):
+			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		default:
 			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())

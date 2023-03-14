@@ -2,16 +2,12 @@ package repository
 
 import (
 	"context"
-	"errors"
-	"strings"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
-	"github.com/antnzr/chat-go/internal/app/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.uber.org/zap"
 )
 
 type userRepository struct {
@@ -27,23 +23,20 @@ func NewUserRepository(db *pgxpool.Pool) domain.UserRepository {
 func (u *userRepository) Save(ctx context.Context, dto *dto.SignupRequest) (*domain.User, error) {
 	sqlQuery := `
 		INSERT INTO "users" ("email", "first_name", "last_name", "password")
-		VALUES ($1, $2, $3, $4)
+		VALUES (@email, @firstName, @lastName, @password)
 		RETURNING "id", "email", "password", "first_name", "last_name", "created_at";
 	`
-	row := u.DB.QueryRow(
-		ctx,
-		sqlQuery,
-		&dto.Email,
-		&dto.FirstName,
-		&dto.LastName,
-		&dto.Password,
-	)
+	args := pgx.NamedArgs{
+		"email":     &dto.Email,
+		"firstName": &dto.FirstName,
+		"lastName":  &dto.LastName,
+		"password":  &dto.Password,
+	}
+	row := u.DB.QueryRow(ctx, sqlQuery, args)
 
 	user, err := scanRowsIntoUser(row)
-	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique") {
-		return nil, errs.ResourceAlreadyExists
-	} else if err != nil {
-		return nil, errs.BadRequest
+	if err != nil {
+		return nil, errs.ClarifyError(err)
 	}
 
 	return user, nil
@@ -59,7 +52,7 @@ func (u *userRepository) FindByEmail(ctx context.Context, email string) (*domain
 
 	user, err := scanRowsIntoUser(row)
 	if err != nil {
-		return nil, errs.ResourceNotFound
+		return nil, errs.ClarifyError(err)
 	}
 
 	return user, nil
@@ -70,16 +63,10 @@ func (u *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
 }
 
 func (u *userRepository) Delete(ctx context.Context, id int) error {
-	switch _, err := u.DB.Exec(ctx, `DELETE FROM "users" WHERE "id" = $1`, id); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case errors.Is(err, pgx.ErrNoRows):
-		return errs.ResourceNotFound
-	case err != nil:
-		logger.Error("failed delete failed: %v\n", zap.Error(err))
-		return errors.New("cannot delete product from database")
+	_, err := u.DB.Exec(ctx, `DELETE FROM "users" WHERE "id" = $1;`, id)
+	if err != nil {
+		return errs.ClarifyError(err)
 	}
-
 	return nil
 }
 
@@ -93,24 +80,29 @@ func (u *userRepository) FindById(ctx context.Context, id int) (*domain.User, er
 
 	user, err := scanRowsIntoUser(row)
 	if err != nil {
-		return nil, errs.ResourceNotFound
+		return nil, errs.ClarifyError(err)
 	}
 
 	return user, nil
 }
 
 func (u *userRepository) Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*domain.User, error) {
+	args := pgx.NamedArgs{
+		"firstName": &dto.FirstName,
+		"lastName":  &dto.LastName,
+		"id":        userId,
+	}
 	const sqlQuery = `
 		UPDATE "users" SET
-			"first_name" = COALESCE(NULLIF($1, NULL), "first_name"),
-			"last_name" = COALESCE(NULLIF($2, NULL), "last_name")
-		WHERE "id" = $3
+			"first_name" = COALESCE(NULLIF(@firstName, NULL), "first_name"),
+			"last_name" = COALESCE(NULLIF(@lastName, NULL), "last_name")
+		WHERE "id" = @id
 		RETURNING "id", "email", "password", "first_name", "last_name", "created_at";
 	`
-	row := u.DB.QueryRow(ctx, sqlQuery, dto.FirstName, dto.LastName, userId)
+	row := u.DB.QueryRow(ctx, sqlQuery, args)
 	user, err := scanRowsIntoUser(row)
 	if err != nil {
-		return nil, errs.ResourceNotFound
+		return nil, errs.ClarifyError(err)
 	}
 
 	return user, nil

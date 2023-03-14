@@ -30,20 +30,20 @@ func Auth(
 		}
 
 		if accessToken == "" {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
+			ctx.AbortWithError(http.StatusUnauthorized, errs.Unauthorized)
 			return
 		}
 
 		authCtx := context.Background()
 		tokenDetails, err := tokenService.ValidateToken(authCtx, accessToken, config.AccessTokenPublicKey)
 		if err != nil {
-			ctx.AbortWithError(http.StatusUnauthorized, err)
+			ctx.AbortWithError(http.StatusUnauthorized, errs.Unauthorized)
 			return
 		}
 
 		user, err := userService.GetMe(authCtx, tokenDetails.UserId)
 		if err != nil {
-			ctx.AbortWithError(http.StatusUnauthorized, errs.ResourceNotFound)
+			ctx.AbortWithError(http.StatusUnauthorized, errs.Unauthorized)
 			return
 		}
 

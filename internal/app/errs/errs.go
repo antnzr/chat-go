@@ -1,6 +1,14 @@
 package errs
 
-import "errors"
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+)
 
 var (
 	InvalidToken          = errors.New("invalid token")
@@ -11,4 +19,24 @@ var (
 	ResourceAlreadyExists = errors.New("resource already exists")
 	BadRequest            = errors.New("bad request")
 	Forbidden             = errors.New("forbidden")
+	DbError               = errors.New("db error")
 )
+
+func ClarifyError(err error) error {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return err
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ResourceNotFound
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case pgerrcode.UniqueViolation:
+			return ResourceAlreadyExists
+		default:
+			return fmt.Errorf("%q: %w", err, DbError)
+		}
+	}
+	return err
+}
