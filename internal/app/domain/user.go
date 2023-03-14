@@ -8,12 +8,12 @@ import (
 )
 
 type User struct {
-	Id        int       `json:"id"`
-	Email     string    `json:"email,omitempty"`
-	Password  string    `json:"-"`
-	FirstName *string   `json:"firstName,omitempty"`
-	LastName  *string   `json:"lastName,omitempty"`
-	CreatedAt time.Time `json:"createdAt,omitempty"`
+	Id        int        `json:"id"`
+	Email     string     `json:"email,omitempty"`
+	Password  string     `json:"-"`
+	FirstName *string    `json:"firstName,omitempty"`
+	LastName  *string    `json:"lastName,omitempty"`
+	CreatedAt time.Time  `json:"createdAt,omitempty"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
@@ -23,7 +23,7 @@ type UserService interface {
 	Logout(ctx context.Context, refreshToken string) error
 	Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*User, error)
 	Delete(ctx context.Context, userId int) error
-	GetMe(ctx context.Context, id int) (*User, error)
+	FindById(ctx context.Context, id int) (*User, error)
 	FindAll(ctx context.Context, searchQuery dto.UserSearchQuery) (*dto.SearchResponse, error)
 }
 

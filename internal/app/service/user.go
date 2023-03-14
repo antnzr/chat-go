@@ -67,7 +67,7 @@ func (us *userService) Logout(ctx context.Context, refreshToken string) error {
 	return nil
 }
 
-func (us *userService) GetMe(ctx context.Context, id int) (*domain.User, error) {
+func (us *userService) FindById(ctx context.Context, id int) (*domain.User, error) {
 	user, err := us.store.User.FindById(ctx, id)
 	if err != nil {
 		return nil, err

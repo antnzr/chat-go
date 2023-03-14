@@ -36,6 +36,7 @@ func (r *appRouter) Setup() {
 		users := v1.Group("/users")
 		{
 			users.GET("/me", r.auth, r.controller.User.GetMe)
+			users.GET("/:id", r.auth, r.controller.User.FindUserById)
 			users.GET("/", r.auth, r.controller.User.FindUsers)
 			users.PATCH("/", r.auth, r.controller.User.UpdateUser)
 			users.DELETE("/", r.auth, r.controller.User.DeleteUser)

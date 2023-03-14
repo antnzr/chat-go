@@ -41,7 +41,7 @@ func Auth(
 			return
 		}
 
-		user, err := userService.GetMe(authCtx, tokenDetails.UserId)
+		user, err := userService.FindById(authCtx, tokenDetails.UserId)
 		if err != nil {
 			ctx.AbortWithError(http.StatusUnauthorized, errs.Unauthorized)
 			return

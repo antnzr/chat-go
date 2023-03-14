@@ -52,6 +52,15 @@ Cookie: {{login.response.headers.Set-Cookie}}
 
 ###
 
+
+# @name findById
+
+GET {{baseUrl}}/users/3
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
 # @name findUsers
 
 GET {{baseUrl}}/users?page=2&limit=9&email=8debd

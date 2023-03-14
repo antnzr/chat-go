@@ -3,9 +3,11 @@ package controller
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
+	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +20,7 @@ type UserController interface {
 	UpdateUser(ctx *gin.Context)
 	DeleteUser(ctx *gin.Context)
 	FindUsers(ctx *gin.Context)
+	FindUserById(ctx *gin.Context)
 }
 
 func NewUserController(us domain.UserService) UserController {
@@ -75,4 +78,20 @@ func (uc *userController) FindUsers(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"data": &result})
+}
+
+func (uc *userController) FindUserById(ctx *gin.Context) {
+	userId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.Error(errs.BadRequest)
+		return
+	}
+
+	user, err := uc.userService.FindById(context.Background(), userId)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"user": &user})
 }
