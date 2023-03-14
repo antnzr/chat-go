@@ -52,6 +52,14 @@ Cookie: {{login.response.headers.Set-Cookie}}
 
 ###
 
+# @name findUsers
+
+GET {{baseUrl}}/users?page=2&limit=9&email=8debdaa
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
 # @name updateUser
 
 PATCH {{baseUrl}}/users

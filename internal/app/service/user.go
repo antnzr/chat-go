@@ -91,6 +91,25 @@ func (us *userService) Delete(ctx context.Context, userId int) error {
 	return us.store.User.Delete(ctx, userId)
 }
 
-func (us *userService) FindAll(ctx context.Context) ([]domain.User, error) {
-	return us.store.User.FindAll(ctx)
+var (
+	defaultPage  = 1
+	defaultLimit = 10
+)
+
+func (us *userService) FindAll(ctx context.Context, searchQuery dto.UserSearchQuery) (*dto.SearchResponse, error) {
+	response := dto.SearchResponse{
+		Page:  searchQuery.Page,
+		Limit: searchQuery.Limit,
+	}
+
+	total, users, err := us.store.User.FindAll(ctx, searchQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	response.Total = total
+	response.Docs = utils.ToSliceOfAny(users)
+	response.TotalPages = utils.PageCount(total, searchQuery.Limit)
+
+	return &response, nil
 }

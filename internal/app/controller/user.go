@@ -17,6 +17,7 @@ type UserController interface {
 	GetMe(c *gin.Context)
 	UpdateUser(ctx *gin.Context)
 	DeleteUser(ctx *gin.Context)
+	FindUsers(ctx *gin.Context)
 }
 
 func NewUserController(us domain.UserService) UserController {
@@ -54,4 +55,20 @@ func (uc *userController) DeleteUser(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusOK)
+}
+
+func (uc *userController) FindUsers(ctx *gin.Context) {
+	var searchQuery dto.UserSearchQuery
+	if err := ctx.ShouldBindQuery(&searchQuery); err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	result, err := uc.userService.FindAll(context.Background(), searchQuery)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"data": &result})
 }

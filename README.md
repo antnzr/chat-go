@@ -7,6 +7,7 @@
 | auth     | GET         | /api/v1/auth/refresh | Request a new token pair |
 | auth     | GET         | /api/v1/auth/logout  | Logout user              |
 | users    | GET         | /api/v1/users/me     | Get me                   |
+| users    | GET         | /api/v1/users        | Find users               |
 | users    | PATCH       | /api/v1/users        | Update user              |
 | users    | DELETE      | /api/v1/users        | Delete user              |
 

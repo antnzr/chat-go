@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
@@ -58,8 +60,54 @@ func (u *userRepository) FindByEmail(ctx context.Context, email string) (*domain
 	return user, nil
 }
 
-func (u *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
-	return []domain.User{}, nil
+func (u *userRepository) FindAll(ctx context.Context, searchQuery dto.UserSearchQuery) (int, []domain.User, error) {
+	var (
+		fields = []string{}
+		args   = []any{}
+	)
+
+	if searchQuery.Email != nil {
+		fields = append(fields, " email ILIKE $1")
+		args = append(args, "%"+*searchQuery.Email+"%")
+	}
+
+	var where string
+	if len(fields) > 0 {
+		where = " WHERE " + strings.Join(fields, " AND ")
+	}
+	totalQuery := fmt.Sprintf(`SELECT COUNT(*) AS total FROM users %s`, where)
+
+	var total int
+	err := u.DB.QueryRow(ctx, totalQuery, args...).Scan(&total)
+	if err != nil {
+		return 0, nil, errs.ClarifyError(err)
+	}
+
+	if total == 0 {
+		return 0, nil, nil
+	}
+
+	sql := fmt.Sprintf(`SELECT * FROM users %s ORDER BY created_at DESC`, where)
+
+	args = append(args, searchQuery.Limit)
+	sql += fmt.Sprintf(` LIMIT $%d`, len(args))
+
+	args = append(args, (searchQuery.Page-1)*searchQuery.Limit)
+	sql += fmt.Sprintf(` OFFSET $%d`, len(args))
+
+	rows, err := u.DB.Query(ctx, sql, args...)
+	defer rows.Close()
+	if err != nil {
+		return 0, nil, errs.ClarifyError(err)
+	}
+
+	var users []domain.User
+	users, err = pgx.CollectRows(rows, pgx.RowToStructByPos[domain.User])
+	if err != nil {
+		return 0, nil, errs.ClarifyError(err)
+	}
+
+	return total, users, nil
 }
 
 func (u *userRepository) Delete(ctx context.Context, id int) error {

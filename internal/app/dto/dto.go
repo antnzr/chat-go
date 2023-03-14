@@ -17,6 +17,20 @@ type LoginRequest struct {
 	Password string `json:"password,omitempty" binding:"required"`
 }
 
+type UserSearchQuery struct {
+	Limit int     `form:"limit,default=20"`
+	Page  int     `form:"page,default=1"`
+	Email *string `form:"email"`
+}
+
+type SearchResponse struct {
+	Page       int           `json:"page"`
+	Limit      int           `json:"limit"`
+	Total      int           `json:"total"`
+	TotalPages int           `json:"totalPages"`
+	Docs       []interface{} `json:"docs"`
+}
+
 type Tokens struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
