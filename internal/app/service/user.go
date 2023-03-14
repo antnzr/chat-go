@@ -73,7 +73,6 @@ func (us *userService) GetMe(ctx context.Context, id int) (*domain.User, error) 
 		return nil, err
 	}
 
-	user.Password = ""
 	return user, nil
 }
 
@@ -83,18 +82,12 @@ func (us *userService) Update(ctx context.Context, userId int, dto *dto.UserUpda
 		return nil, err
 	}
 
-	user.Password = ""
 	return user, nil
 }
 
 func (us *userService) Delete(ctx context.Context, userId int) error {
 	return us.store.User.Delete(ctx, userId)
 }
-
-var (
-	defaultPage  = 1
-	defaultLimit = 10
-)
 
 func (us *userService) FindAll(ctx context.Context, searchQuery dto.UserSearchQuery) (*dto.SearchResponse, error) {
 	response := dto.SearchResponse{

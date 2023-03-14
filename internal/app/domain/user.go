@@ -14,7 +14,7 @@ type User struct {
 	FirstName *string   `json:"firstName,omitempty"`
 	LastName  *string   `json:"lastName,omitempty"`
 	CreatedAt time.Time `json:"createdAt,omitempty"`
-	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 type UserService interface {

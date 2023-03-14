@@ -20,6 +20,7 @@ var (
 	BadRequest            = errors.New("bad request")
 	Forbidden             = errors.New("forbidden")
 	DbError               = errors.New("db error")
+	LimitExceeded         = errors.New("limit exceeded")
 )
 
 func ClarifyError(err error) error {

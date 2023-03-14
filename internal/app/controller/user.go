@@ -63,6 +63,10 @@ func (uc *userController) FindUsers(ctx *gin.Context) {
 		ctx.Error(err)
 		return
 	}
+	if err := searchQuery.Validate(); err != nil {
+		ctx.Error(err)
+		return
+	}
 
 	result, err := uc.userService.FindAll(context.Background(), searchQuery)
 	if err != nil {
