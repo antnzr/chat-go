@@ -39,7 +39,7 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
-	updated, err := uc.userService.Update(context.Background(), currentUser.Id, &dto)
+	updated, err := uc.userService.Update(context.TODO(), currentUser.Id, &dto)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -51,7 +51,7 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 func (uc *userController) DeleteUser(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
 
-	err := uc.userService.Delete(context.Background(), currentUser.Id)
+	err := uc.userService.Delete(context.TODO(), currentUser.Id)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -71,7 +71,7 @@ func (uc *userController) FindUsers(ctx *gin.Context) {
 		return
 	}
 
-	result, err := uc.userService.FindAll(context.Background(), searchQuery)
+	result, err := uc.userService.FindAll(context.TODO(), searchQuery)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -87,7 +87,7 @@ func (uc *userController) FindUserById(ctx *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.FindById(context.Background(), userId)
+	user, err := uc.userService.FindById(context.TODO(), userId)
 	if err != nil {
 		ctx.Error(err)
 		return

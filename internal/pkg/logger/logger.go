@@ -9,22 +9,12 @@ import (
 
 var zapLog *zap.Logger
 
-func getLogConfig() zap.Config {
-	config, _ := config.LoadConfig(".")
-	env := config.GinMode
-	if env == gin.ReleaseMode {
-		config := zap.NewProductionConfig()
-		zapcore.TimeEncoderOfLayout("Jan _2 15:04:05.000000000")
-		return config
-	}
-	return zap.NewDevelopmentConfig()
-}
-
 func init() {
+	mainConfig, _ := config.LoadConfig(".")
+
 	var err error
-	config := getLogConfig()
+	config := getLogConfig(mainConfig)
 	zapLog, err = config.Build(zap.AddCallerSkip(1))
-	defer zapLog.Sync()
 	if err != nil {
 		panic(err)
 	}
@@ -32,6 +22,10 @@ func init() {
 
 func GetLogger() *zap.Logger {
 	return zapLog
+}
+
+func Flush() error {
+	return zapLog.Sync()
 }
 
 func Info(message string, fields ...zap.Field) {
@@ -48,4 +42,22 @@ func Error(message string, fields ...zap.Field) {
 
 func Fatal(message string, fields ...zap.Field) {
 	zapLog.Fatal(message, fields...)
+}
+
+func Fatality(fields ...zap.Field) {
+	zapLog.Fatal("", fields...)
+}
+
+func getLogConfig(config config.Config) zap.Config {
+	var zapConfig zap.Config
+	if config.GinMode == gin.ReleaseMode {
+		zapConfig = zap.NewProductionConfig()
+	} else {
+		zapConfig = zap.NewDevelopmentConfig()
+	}
+
+	zapConfig.EncoderConfig.TimeKey = "@ts"
+	zapConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+
+	return zapConfig
 }

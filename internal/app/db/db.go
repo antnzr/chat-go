@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/antnzr/chat-go/config"
-	"github.com/antnzr/chat-go/internal/app/logger"
+	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"

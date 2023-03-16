@@ -10,8 +10,8 @@ import (
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
-	"github.com/antnzr/chat-go/internal/app/logger"
 	"github.com/antnzr/chat-go/internal/app/repository"
+	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
