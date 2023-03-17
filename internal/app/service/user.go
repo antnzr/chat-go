@@ -22,16 +22,16 @@ func NewUserService(store *repository.Store, tokenService domain.TokenService) d
 	return &userService{store, config, tokenService}
 }
 
-func (us *userService) Signup(ctx context.Context, signupReq *dto.SignupRequest) error {
+func (us *userService) Signup(ctx context.Context, signupReq *dto.SignupRequest) (*domain.User, error) {
 	hash := utils.HashPassword(signupReq.Password)
 
 	signupReq.Password = hash
-	_, err := us.store.User.Save(ctx, signupReq)
+	user, err := us.store.User.Save(ctx, signupReq)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return user, nil
 }
 
 func (us *userService) Login(ctx context.Context, loginReq *dto.LoginRequest) (*dto.Tokens, error) {

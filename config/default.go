@@ -2,17 +2,25 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	GinMode                string        `mapstructure:"GIN_MODE"`
-	Port                   string        `mapstructure:"PORT"`
-	Origin                 []string      `mapstructure:"ORIGIN"`
-	DatabaseURL            string        `mapstructure:"DATABASE_URL"`
-	PgLogLevel             string        `mapstructure:"PGX_LOG_LEVEL"`
+	GinMode string   `mapstructure:"GIN_MODE"`
+	Env     string   `mapstructure:"ENV"`
+	Port    string   `mapstructure:"PORT"`
+	Origin  []string `mapstructure:"ORIGIN"`
+
+	PgDbName    string `mapstructure:"POSTGRES_DB"`
+	PgUser      string `mapstructure:"POSTGRES_USER"`
+	PgPort      int    `mapstructure:"POSTGRES_PORT"`
+	PgPassword  string `mapstructure:"POSTGRES_PASSWORD"`
+	DatabaseURL string `mapstructure:"DATABASE_URL"`
+	PgLogLevel  string `mapstructure:"PGX_LOG_LEVEL"`
+
 	AccessTokenPrivateKey  string        `mapstructure:"ACCESS_TOKEN_PRIVATE_KEY"`
 	AccessTokenPublicKey   string        `mapstructure:"ACCESS_TOKEN_PUBLIC_KEY"`
 	AccessTokenExpiresIn   time.Duration `mapstructure:"ACCESS_TOKEN_EXPIRED_IN"`
@@ -26,7 +34,12 @@ type Config struct {
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigType("env")
-	viper.SetConfigName(".env")
+
+	if os.Getenv("ENV") == "test" {
+		viper.SetConfigName("env.test")
+	} else {
+		viper.SetConfigName(".env")
+	}
 
 	viper.AutomaticEnv()
 

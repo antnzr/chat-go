@@ -47,7 +47,7 @@ func (controller *authController) Signup(ctx *gin.Context) {
 		return
 	}
 
-	err := controller.userService.Signup(context.TODO(), &dto)
+	_, err := controller.userService.Signup(context.TODO(), &dto)
 	if err != nil {
 		ctx.Error(err)
 		return

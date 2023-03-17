@@ -9,12 +9,10 @@ import (
 
 var zapLog *zap.Logger
 
-func init() {
-	mainConfig, _ := config.LoadConfig(".")
-
+func Create(config config.Config) {
+	logConfig := getLogConfig(config)
 	var err error
-	config := getLogConfig(mainConfig)
-	zapLog, err = config.Build(zap.AddCallerSkip(1))
+	zapLog, err = logConfig.Build(zap.AddCallerSkip(1))
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +23,10 @@ func GetLogger() *zap.Logger {
 }
 
 func Flush() error {
-	return zapLog.Sync()
+	if zapLog != nil {
+		return zapLog.Sync()
+	}
+	return nil
 }
 
 func Info(message string, fields ...zap.Field) {

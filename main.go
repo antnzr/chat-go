@@ -15,16 +15,18 @@ import (
 )
 
 func main() {
-	config, _ := config.LoadConfig(".")
+	conf, _ := config.LoadConfig(".")
+
+	logger.Create(conf)
 	defer logger.Flush()
 
-	pgPool, err := db.DBPool(context.Background(), config)
+	pgPool, err := db.DBPool(context.Background(), conf)
 	if err != nil {
 		logger.Fatality(zap.Error(err))
 	}
 	defer pgPool.Close()
 
-	srv := app.NewServer(config, pgPool)
+	srv := app.NewServer(conf, pgPool)
 
 	ec := make(chan error, 1)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
