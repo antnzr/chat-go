@@ -1,0 +1,13 @@
+.editorconfig
+AUTHORS.md
+CONTRIBUTING.md
+LICENSE
+Makefile
+NOTICE
+README.md
+.git
+**/*.tar.gz
+**/*.tgz
+.vscode
+.env
+*.log

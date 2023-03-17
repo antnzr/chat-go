@@ -67,8 +67,8 @@ func createContainer(ctx context.Context, conf *config.Config) (testcontainers.C
 				WithStartupTimeout(5*time.Second)).
 			WithDeadline(1 * time.Minute),
 		FromDockerfile: testcontainers.FromDockerfile{
-			Dockerfile:    "Dockerfile",
-			Context:       getDbDirAbsolutePath(),
+			Dockerfile: "Dockerfile",
+			Context:    getDbDirAbsolutePath(),
 		},
 		Env: map[string]string{
 			"POSTGRES_DB":       conf.PgDbName,
