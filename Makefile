@@ -23,17 +23,20 @@ clean:
 	@docker rm -f ${GOLANG_DOCKER_CONTAINER} || true
 
 build:
-	@go build -o ./cmd/app
+	@go build -o ./bin/app cmd/chatgo/main.go
+
+build-docker:
+	@docker build -t chatgo .
 
 run:
-	@./cmd/app
+	@./bin/app
 
 start: build run
 
 dev:
 	@CompileDaemon -exclude-dir=".git,migrations" \
-		-command="./cmd/app" \
-		-build="go build -o ./cmd/app" \
+		-command="./bin/app" \
+		-build="go build -o ./bin/app cmd/chatgo/main.go" \
 		-color -log-prefix=false
 
 test:

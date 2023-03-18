@@ -2,5 +2,5 @@
 *.key
 .vscode
 .env
-cmd/*
+bin
 .vscode/settings.json
