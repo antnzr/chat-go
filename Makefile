@@ -17,7 +17,7 @@ endif
 #   Usage:
 #       make lint
 lint:
-	@docker run --rm -v ${ROOT}:/data cytopia/golint .
+	@docker run --rm -v ${ROOT}:/data -w /data golangci/golangci-lint golangci-lint run
 
 clean:
 	@docker rm -f ${GOLANG_DOCKER_CONTAINER} || true

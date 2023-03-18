@@ -35,13 +35,13 @@ func (uc *userController) GetMe(ctx *gin.Context) {
 func (uc *userController) UpdateUser(ctx *gin.Context) {
 	var dto dto.UserUpdateRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
 	updated, err := uc.userService.Update(context.TODO(), currentUser.Id, &dto)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (uc *userController) DeleteUser(ctx *gin.Context) {
 
 	err := uc.userService.Delete(context.TODO(), currentUser.Id)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
@@ -63,17 +63,17 @@ func (uc *userController) DeleteUser(ctx *gin.Context) {
 func (uc *userController) FindUsers(ctx *gin.Context) {
 	var searchQuery dto.UserSearchQuery
 	if err := ctx.ShouldBindQuery(&searchQuery); err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 	if err := searchQuery.Validate(); err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
 	result, err := uc.userService.FindAll(context.TODO(), searchQuery)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
@@ -83,13 +83,13 @@ func (uc *userController) FindUsers(ctx *gin.Context) {
 func (uc *userController) FindUserById(ctx *gin.Context) {
 	userId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.Error(errs.BadRequest)
+		_ = ctx.Error(errs.BadRequest)
 		return
 	}
 
 	user, err := uc.userService.FindById(context.TODO(), userId)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 

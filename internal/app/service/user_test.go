@@ -47,7 +47,7 @@ func TestSignupUser(t *testing.T) {
 
 func TestFindUser(t *testing.T) {
 	email := gofakeit.Email()
-	signed, err := userSrvc.Signup(context.TODO(), &dto.SignupRequest{
+	signed, _ := userSrvc.Signup(context.TODO(), &dto.SignupRequest{
 		Email:    email,
 		Password: "password",
 	})
@@ -62,7 +62,7 @@ func TestFindUser(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	email := gofakeit.Email()
 	firstName := gofakeit.FirstName()
-	signed, err := userSrvc.Signup(context.TODO(), &dto.SignupRequest{
+	signed, _ := userSrvc.Signup(context.TODO(), &dto.SignupRequest{
 		Email:     email,
 		FirstName: firstName,
 		Password:  "password",

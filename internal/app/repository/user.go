@@ -96,10 +96,10 @@ func (u *userRepository) FindAll(ctx context.Context, searchQuery dto.UserSearch
 	sql += fmt.Sprintf(` OFFSET $%d`, len(args))
 
 	rows, err := u.DB.Query(ctx, sql, args...)
-	defer rows.Close()
 	if err != nil {
 		return 0, nil, errs.ClarifyError(err)
 	}
+	defer rows.Close()
 
 	var users []domain.User
 	users, err = pgx.CollectRows(rows, pgx.RowToStructByPos[domain.User])
@@ -158,8 +158,7 @@ func (u *userRepository) Update(ctx context.Context, userId int, dto *dto.UserUp
 
 func scanRowsIntoUser(row pgx.Row) (*domain.User, error) {
 	var user domain.User
-	var err error
-	err = row.Scan(
+	err := row.Scan(
 		&user.Id,
 		&user.Email,
 		&user.Password,

@@ -43,13 +43,13 @@ func NewAuthController(userService domain.UserService, tokenService domain.Token
 func (controller *authController) Signup(ctx *gin.Context) {
 	var dto dto.SignupRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
 	_, err := controller.userService.Signup(context.TODO(), &dto)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
@@ -59,13 +59,13 @@ func (controller *authController) Signup(ctx *gin.Context) {
 func (ac *authController) Login(ctx *gin.Context) {
 	var dto dto.LoginRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
 	tokens, err := ac.userService.Login(context.TODO(), &dto)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 
@@ -75,16 +75,19 @@ func (ac *authController) Login(ctx *gin.Context) {
 func (ac *authController) Logout(ctx *gin.Context) {
 	refreshToken, err := ctx.Cookie("refreshToken")
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
+		return
 	}
 
 	if refreshToken == "" {
-		ctx.Error(errs.Forbidden)
+		_ = ctx.Error(errs.Forbidden)
+		return
 	}
 
 	err = ac.userService.Logout(context.TODO(), refreshToken)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
+		return
 	}
 
 	isSecure := ac.config.GinMode != gin.DebugMode
@@ -97,16 +100,18 @@ func (ac *authController) Logout(ctx *gin.Context) {
 func (ac *authController) Refresh(ctx *gin.Context) {
 	refreshToken, err := ctx.Cookie("refreshToken")
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
+		return
 	}
 
 	if refreshToken == "" {
-		ctx.Error(errs.Forbidden)
+		_ = ctx.Error(errs.Forbidden)
+		return
 	}
 
 	tokens, err := ac.tokenService.RefreshTokenPair(context.TODO(), refreshToken)
 	if err != nil {
-		ctx.Error(err)
+		_ = ctx.Error(err)
 		return
 	}
 

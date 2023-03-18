@@ -58,7 +58,7 @@ func (s *HttpServer) setup() *gin.Engine {
 	gin.SetMode(s.config.GinMode)
 
 	engine := gin.New()
-	engine.SetTrustedProxies(nil)
+	_ = engine.SetTrustedProxies(nil)
 	engine.Use(middleware.ErrorHandler())
 
 	engine.Use(ginzap.Ginzap(logger.GetLogger(), time.RFC3339Nano, true))
