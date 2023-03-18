@@ -14,24 +14,25 @@ else
 	@docker run --rm -v ${ROOT}:/data cytopia/gofmt -s -w .
 endif
 
-#   Usage:
-#       make lint
 lint:
 	@docker run --rm -v ${ROOT}:/data -w /data golangci/golangci-lint golangci-lint run
 
 clean:
 	@docker rm -f ${GOLANG_DOCKER_CONTAINER} || true
 
-build:
-	@go build -o ./bin/app cmd/chatgo/main.go
-
 build-docker:
 	@docker build -t chatgo .
+
+build:
+	@go build -o ./bin/app cmd/chatgo/main.go
 
 run:
 	@./bin/app
 
 start: build run
+
+dbmigrate:
+	@./scripts/db_migrate.sh migrate
 
 dev:
 	@CompileDaemon -exclude-dir=".git,migrations" \
@@ -40,5 +41,4 @@ dev:
 		-color -log-prefix=false
 
 test:
-	@export ENV=test && go test -v ./...
-	# @export ENV=test && go test -mod=mod -count=1 --race ./...
+	@export ENV=test && go test -v -coverprofile=profile.cov ./...

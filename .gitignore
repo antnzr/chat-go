@@ -4,3 +4,4 @@
 .env
 bin
 .vscode/settings.json
+profile.cov
