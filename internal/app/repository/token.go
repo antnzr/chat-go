@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
-	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -32,7 +31,7 @@ func (tr *tokenRepository) FindById(ctx context.Context, tokenId string) (*domai
 	return &token, nil
 }
 
-func (tr *tokenRepository) Save(ctx context.Context, data *dto.TokenDetails) (*domain.Token, error) {
+func (tr *tokenRepository) Save(ctx context.Context, data *domain.TokenDetails) (*domain.Token, error) {
 	sqlQuery := `
 		INSERT INTO "refresh_tokens" ("id", "token", "user_id")
 		VALUES (@id, @token, @userId)

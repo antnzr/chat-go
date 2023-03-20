@@ -1,0 +1,261 @@
+definitions:
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.LoginResponse:
+    properties:
+      accessToken:
+        type: string
+    type: object
+  dto.SearchResponse:
+    properties:
+      docs:
+        items: {}
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  dto.SignupRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.UserResponse:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: integer
+      lastName:
+        type: string
+    type: object
+  dto.UserUpdateRequest:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+    type: object
+info:
+  contact:
+    email: antoinenaza@gmail.com
+    name: The APP support
+  description: The APP Swagger APIs.
+  termsOfService: http://swagger.io/terms/
+  title: The APP
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      description: Login user
+      parameters:
+      - description: Login request
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "401":
+          description: Unauthorized
+      summary: Login user
+      tags:
+      - Authentication
+  /auth/logout:
+    get:
+      description: Logout user
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Logout user
+      tags:
+      - Authentication
+  /auth/refresh:
+    post:
+      description: Refresh tokens
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Refresh tokens
+      tags:
+      - Authentication
+  /auth/signup:
+    post:
+      description: Signup user
+      parameters:
+      - description: Signup request
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SignupRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Signup user
+      tags:
+      - Authentication
+  /users:
+    delete:
+      description: Delete user
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Delete user
+      tags:
+      - User
+    get:
+      description: Find users
+      parameters:
+      - description: Limit per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Search by email
+        in: query
+        name: email
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SearchResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Find users
+      tags:
+      - User
+    patch:
+      description: Update user's information
+      parameters:
+      - description: User's data to update
+        in: body
+        name: dto
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserUpdateRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Update user
+      tags:
+      - User
+  /users/{id}:
+    get:
+      description: Find user by id
+      parameters:
+      - description: User's id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      tags:
+      - User
+  /users/me:
+    get:
+      description: Get my user information
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Get me
+      tags:
+      - User
+securityDefinitions:
+  JWT:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

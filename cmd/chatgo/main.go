@@ -14,6 +14,20 @@ import (
 	"go.uber.org/zap"
 )
 
+// @title The APP
+// @version 1.0
+// @description The APP Swagger APIs.
+// @termsOfService http://swagger.io/terms/
+// @contact.name The APP support
+// @contact.email antoinenaza@gmail.com
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @host localhost:55044
+// @BasePath /api/v1
+// @schemes http
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	conf, _ := config.LoadConfig(".")
 

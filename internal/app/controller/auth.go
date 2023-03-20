@@ -9,6 +9,8 @@ import (
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/gin-gonic/gin"
+
+	_ "github.com/antnzr/chat-go/docs"
 )
 
 type authController struct {
@@ -40,6 +42,14 @@ func NewAuthController(userService domain.UserService, tokenService domain.Token
 	return &authController{userService, tokenService, config}
 }
 
+// Signup godoc
+// @Summary Signup user
+// @Description Signup user
+// @Param dto body dto.SignupRequest true "Signup request"
+// @Tags Authentication
+// @Success 200
+// @Failure 400
+// @Router /auth/signup [post]
 func (controller *authController) Signup(ctx *gin.Context) {
 	var dto dto.SignupRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
@@ -56,6 +66,16 @@ func (controller *authController) Signup(ctx *gin.Context) {
 	ctx.Status(http.StatusCreated)
 }
 
+// Login godoc
+// @Summary Login user
+// @Description Login user
+// @Param dto body dto.LoginRequest true "Login request"
+// @Tags Authentication
+// @Header 200 {string} string accessToken
+// @Header 200 {string} string refreshToken
+// @Success 200 {object} dto.LoginResponse
+// @Failure 401
+// @Router /auth/login [post]
 func (ac *authController) Login(ctx *gin.Context) {
 	var dto dto.LoginRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
@@ -72,6 +92,17 @@ func (ac *authController) Login(ctx *gin.Context) {
 	tokensResponse(ctx, tokens, &ac.config)
 }
 
+// Logout godoc
+// @Summary Logout user
+// @Description Logout user
+// @Tags Authentication
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @Security JWT
+// @Success 200
+// @Failure 403
+// @Router /auth/logout [get]
 func (ac *authController) Logout(ctx *gin.Context) {
 	refreshToken, err := ctx.Cookie("refreshToken")
 	if err != nil {
@@ -97,10 +128,24 @@ func (ac *authController) Logout(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+// Refresh godoc
+// @Summary Refresh tokens
+// @Description Refresh tokens
+// @Tags Authentication
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @Security JWT
+// @Header 200 {string} string accessToken
+// @Header 200 {string} string refreshToken
+// @Success 200 {object} dto.LoginResponse
+// @Failure 401
+// @Failure 403
+// @Router /auth/refresh [post]
 func (ac *authController) Refresh(ctx *gin.Context) {
 	refreshToken, err := ctx.Cookie("refreshToken")
 	if err != nil {
-		_ = ctx.Error(err)
+		_ = ctx.Error(errs.Forbidden)
 		return
 	}
 
@@ -118,13 +163,13 @@ func (ac *authController) Refresh(ctx *gin.Context) {
 	tokensResponse(ctx, tokens, &ac.config)
 }
 
-func tokensResponse(ctx *gin.Context, tokens *dto.Tokens, config *config.Config) {
+func tokensResponse(ctx *gin.Context, tokens *domain.Tokens, config *config.Config) {
 	isSecure := config.GinMode != gin.DebugMode
 	ctx.SetCookie(accessToken, tokens.AccessToken, config.AccessTokenMaxAge*seconds, path, localhost, isSecure, true)
 	ctx.SetCookie(refreshToken, tokens.RefreshToken, config.RefreshTokenMaxAge*seconds, path, localhost, isSecure, true)
 	ctx.SetCookie(isLoggedIn, "true", config.AccessTokenMaxAge*seconds, path, localhost, isSecure, false)
 
-	ctx.JSON(http.StatusOK, gin.H{"accessToken": tokens.AccessToken})
+	ctx.JSON(http.StatusOK, dto.LoginResponse{AccessToken: accessToken})
 }
 
 // fmt.Errorf("%q: %w", name, ErrUserNotFound)

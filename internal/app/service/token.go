@@ -8,7 +8,6 @@ import (
 
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
-	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
@@ -26,7 +25,7 @@ func NewTokenService(store *repository.Store) domain.TokenService {
 	return &tokenService{store, config}
 }
 
-func (ts *tokenService) RefreshTokenPair(ctx context.Context, refreshToken string) (*dto.Tokens, error) {
+func (ts *tokenService) RefreshTokenPair(ctx context.Context, refreshToken string) (*domain.Tokens, error) {
 	tokenDetails, err := ts.ValidateToken(ctx, refreshToken, ts.config.RefreshTokenPublicKey)
 	if err != nil {
 		return nil, errs.Forbidden
@@ -50,7 +49,7 @@ func (ts *tokenService) RefreshTokenPair(ctx context.Context, refreshToken strin
 	return ts.CreateTokenPair(ctx, user)
 }
 
-func (ts *tokenService) CreateTokenPair(ctx context.Context, user *domain.User) (*dto.Tokens, error) {
+func (ts *tokenService) CreateTokenPair(ctx context.Context, user *domain.User) (*domain.Tokens, error) {
 	refreshTokenDetails, err := ts.createToken(
 		user.Id,
 		ts.config.RefreshTokenExpiresIn,
@@ -74,13 +73,13 @@ func (ts *tokenService) CreateTokenPair(ctx context.Context, user *domain.User) 
 		return nil, err
 	}
 
-	return &dto.Tokens{
+	return &domain.Tokens{
 		AccessToken:  *accessTokenDetails.Token,
 		RefreshToken: *refreshTokenDetails.Token,
 	}, nil
 }
 
-func (ts *tokenService) ValidateToken(ctx context.Context, tokenStr string, publicKey string) (*dto.TokenDetails, error) {
+func (ts *tokenService) ValidateToken(ctx context.Context, tokenStr string, publicKey string) (*domain.TokenDetails, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
 		logger.Error(fmt.Sprintf("could not decode: %v", err))
@@ -114,7 +113,7 @@ func (ts *tokenService) ValidateToken(ctx context.Context, tokenStr string, publ
 		return nil, errs.InvalidToken
 	}
 
-	return &dto.TokenDetails{
+	return &domain.TokenDetails{
 		TokenUuid: fmt.Sprint(claims["jti"]),
 		UserId:    int(userId),
 	}, nil
@@ -131,8 +130,8 @@ func (ts *tokenService) createToken(
 	userId int,
 	ttl time.Duration,
 	privateKey string,
-) (*dto.TokenDetails, error) {
-	td := &dto.TokenDetails{
+) (*domain.TokenDetails, error) {
+	td := &domain.TokenDetails{
 		ExpiresIn: new(int64),
 		Token:     new(string),
 	}

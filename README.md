@@ -11,6 +11,7 @@
 | users    | GET         | /api/v1/users        | Find users               |
 | users    | PATCH       | /api/v1/users        | Update user              |
 | users    | DELETE      | /api/v1/users        | Delete user              |
+|          |             | /swagger/index.html  | Api docs                 |
 
 #### TOOLS:
 
@@ -18,6 +19,7 @@
 - gin
 - postgres, pgx
 - zap
+- gin-swagger [docs](http://localhost:55044/swagger/index.html)
 
 #### Generate rsa key for jwt, and paste them to .env or use a script in a `scripts` dir
 

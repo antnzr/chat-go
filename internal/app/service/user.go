@@ -34,7 +34,7 @@ func (us *userService) Signup(ctx context.Context, signupReq *dto.SignupRequest)
 	return user, nil
 }
 
-func (us *userService) Login(ctx context.Context, loginReq *dto.LoginRequest) (*dto.Tokens, error) {
+func (us *userService) Login(ctx context.Context, loginReq *dto.LoginRequest) (*domain.Tokens, error) {
 	user, err := us.store.User.FindByEmail(ctx, loginReq.Email)
 	if err != nil {
 		return nil, errs.IncorrectCredentials

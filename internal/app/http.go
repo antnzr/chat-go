@@ -10,8 +10,11 @@ import (
 	"github.com/antnzr/chat-go/internal/app/middleware"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/gin-contrib/cors"
-	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+
+	ginzap "github.com/gin-contrib/zap"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type HttpServer struct {
@@ -98,6 +101,8 @@ func (s *HttpServer) setupRoutes(engine *gin.Engine) {
 			users.DELETE("/", m_auth, userController.DeleteUser)
 		}
 	}
+
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	engine.GET("/health", func(ctx *gin.Context) {
 		ctx.Status(http.StatusTeapot)

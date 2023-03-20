@@ -42,3 +42,6 @@ dev:
 
 test:
 	@export ENV=test && go test -v -coverprofile=profile.cov ./...
+
+swagger:
+	@swag init -d ./cmd/chatgo,./internal/app/controller --pd -o ./docs --parseInternal --parseDepth 1

@@ -9,6 +9,8 @@ import (
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/gin-gonic/gin"
+
+	_ "github.com/antnzr/chat-go/docs"
 )
 
 type userController struct {
@@ -27,11 +29,37 @@ func NewUserController(us domain.UserService) UserController {
 	return &userController{userService: us}
 }
 
+// GetMe godoc
+// @Summary Get me
+// @Description Get my user information
+// @Tags User
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @Security JWT
+// @Success 200 {object} dto.UserResponse
+// @Failure 401
+// @Failure 403
+// @Router /users/me [get]
 func (uc *userController) GetMe(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
-	ctx.JSON(http.StatusOK, gin.H{"user": currentUser})
+	ctx.JSON(http.StatusOK, mapToUserResponse(currentUser))
 }
 
+// UpdateUser godoc
+// @Summary Update user
+// @Description Update user's information
+// @Tags User
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @Security JWT
+// @Param dto body dto.UserUpdateRequest true "User's data to update"
+// @Success 200 {object} dto.UserResponse
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Router /users [patch]
 func (uc *userController) UpdateUser(ctx *gin.Context) {
 	var dto dto.UserUpdateRequest
 	if err := ctx.ShouldBindJSON(&dto); err != nil {
@@ -45,9 +73,22 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"user": updated})
+	ctx.JSON(http.StatusOK, mapToUserResponse(updated))
 }
 
+// DeleteUser godoc
+// @Summary Delete user
+// @Description Delete user
+// @Tags User
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @Security JWT
+// @Success 200
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Router /users [delete]
 func (uc *userController) DeleteUser(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
 
@@ -60,6 +101,22 @@ func (uc *userController) DeleteUser(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+// FindUsers godoc
+// @Summary Find users
+// @Description Find users
+// @Tags User
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @Security JWT
+// @Param limit query int  		false  "Limit per page"
+// @Param page  query int  		false  "Page number"
+// @Param email query string  false  "Search by email"
+// @Success 200 {object} dto.SearchResponse
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Router /users [get]
 func (uc *userController) FindUsers(ctx *gin.Context) {
 	var searchQuery dto.UserSearchQuery
 	if err := ctx.ShouldBindQuery(&searchQuery); err != nil {
@@ -77,9 +134,23 @@ func (uc *userController) FindUsers(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": &result})
+	ctx.JSON(http.StatusOK, result)
 }
 
+// FindUserById godoc
+// @FindUserById Find user by id
+// @Description Find user by id
+// @Tags User
+// @securityDefinitions.apiKey JWT
+// @in header
+// @name Authorization
+// @Security JWT
+// @Param id path int true "User's id"
+// @Success 200 {object} dto.UserResponse
+// @Failure 400
+// @Failure 401
+// @Failure 403
+// @Router /users/{id} [get]
 func (uc *userController) FindUserById(ctx *gin.Context) {
 	userId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -93,5 +164,15 @@ func (uc *userController) FindUserById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"user": &user})
+	ctx.JSON(http.StatusOK, mapToUserResponse(user))
+}
+
+func mapToUserResponse(user *domain.User) *dto.UserResponse {
+	return &dto.UserResponse{
+		Id:        user.Id,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		CreatedAt: user.CreatedAt,
+	}
 }

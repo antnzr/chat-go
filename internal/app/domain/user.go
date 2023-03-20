@@ -19,7 +19,7 @@ type User struct {
 
 type UserService interface {
 	Signup(ctx context.Context, dto *dto.SignupRequest) (*User, error)
-	Login(ctx context.Context, dto *dto.LoginRequest) (*dto.Tokens, error)
+	Login(ctx context.Context, dto *dto.LoginRequest) (*Tokens, error)
 	Logout(ctx context.Context, refreshToken string) error
 	Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*User, error)
 	Delete(ctx context.Context, userId int) error
