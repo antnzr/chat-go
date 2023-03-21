@@ -169,7 +169,7 @@ func tokensResponse(ctx *gin.Context, tokens *domain.Tokens, config *config.Conf
 	ctx.SetCookie(refreshToken, tokens.RefreshToken, config.RefreshTokenMaxAge*seconds, path, localhost, isSecure, true)
 	ctx.SetCookie(isLoggedIn, "true", config.AccessTokenMaxAge*seconds, path, localhost, isSecure, false)
 
-	ctx.JSON(http.StatusOK, dto.LoginResponse{AccessToken: accessToken})
+	ctx.JSON(http.StatusOK, dto.LoginResponse{AccessToken: tokens.AccessToken})
 }
 
 // fmt.Errorf("%q: %w", name, ErrUserNotFound)
