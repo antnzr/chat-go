@@ -15,11 +15,12 @@
 
 #### TOOLS:
 
-- golang
+- golang 1.20
 - gin
 - postgres, pgx
-- zap
-- gin-swagger [docs](http://localhost:55044/swagger/index.html)
+- zap logging
+- nginx (local ssl setup with minica)
+- gin-swagger [docs](https://home.domain/swagger/index.html)
 
 #### Generate rsa key for jwt, and paste them to .env or use a script in a `scripts` dir
 
