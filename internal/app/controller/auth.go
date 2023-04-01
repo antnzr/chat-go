@@ -122,6 +122,7 @@ func (ac *authController) Logout(ctx *gin.Context) {
 	}
 
 	isSecure := ac.config.GinMode != gin.DebugMode
+	ctx.SetSameSite(http.SameSiteLaxMode)
 	ctx.SetCookie(accessToken, empty, deleteCookie, path, localhost, isSecure, true)
 	ctx.SetCookie(refreshToken, empty, deleteCookie, path, localhost, isSecure, true)
 	ctx.SetCookie(isLoggedIn, empty, deleteCookie, path, localhost, isSecure, true)
@@ -165,9 +166,10 @@ func (ac *authController) Refresh(ctx *gin.Context) {
 
 func tokensResponse(ctx *gin.Context, tokens *domain.Tokens, config *config.Config) {
 	isSecure := config.GinMode != gin.DebugMode
-	ctx.SetCookie(accessToken, tokens.AccessToken, config.AccessTokenMaxAge*seconds, path, localhost, isSecure, true)
-	ctx.SetCookie(refreshToken, tokens.RefreshToken, config.RefreshTokenMaxAge*seconds, path, localhost, isSecure, true)
-	ctx.SetCookie(isLoggedIn, "true", config.AccessTokenMaxAge*seconds, path, localhost, isSecure, false)
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie(accessToken, tokens.AccessToken, config.AccessTokenMaxAge*seconds, path, empty, isSecure, true)
+	ctx.SetCookie(refreshToken, tokens.RefreshToken, config.RefreshTokenMaxAge*seconds, path, empty, isSecure, true)
+	ctx.SetCookie(isLoggedIn, "true", config.AccessTokenMaxAge*seconds, path, empty, isSecure, false)
 
 	ctx.JSON(http.StatusOK, dto.LoginResponse{AccessToken: tokens.AccessToken})
 }
