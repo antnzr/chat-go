@@ -8,6 +8,7 @@ import (
 
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/middleware"
+	"github.com/antnzr/chat-go/internal/app/ws"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,7 @@ func NewHttpServer(
 }
 
 func (s *HttpServer) Run(ctx context.Context) error {
-	engine := s.setup()
+	engine := s.setup(ctx)
 
 	s.http = &http.Server{
 		Addr:    fmt.Sprintf(":%s", s.config.Port),
@@ -57,7 +58,7 @@ func (s *HttpServer) Shutdown(ctx context.Context) {
 	}
 }
 
-func (s *HttpServer) setup() *gin.Engine {
+func (s *HttpServer) setup(ctx context.Context) *gin.Engine {
 	gin.SetMode(s.config.GinMode)
 
 	engine := gin.New()
@@ -71,12 +72,12 @@ func (s *HttpServer) setup() *gin.Engine {
 	corsConfig.AllowOrigins = s.config.Origin
 	corsConfig.AllowCredentials = true
 	engine.Use(cors.New(corsConfig))
+	s.setupRoutes(ctx, engine)
 
-	s.setupRoutes(engine)
 	return engine
 }
 
-func (s *HttpServer) setupRoutes(engine *gin.Engine) {
+func (s *HttpServer) setupRoutes(ctx context.Context, engine *gin.Engine) {
 	v1 := engine.Group("/api/v1")
 
 	m_auth := s.container.Middlewares["auth"]
@@ -102,15 +103,19 @@ func (s *HttpServer) setupRoutes(engine *gin.Engine) {
 		}
 	}
 
+	manager := ws.NewManager(ctx, s.config)
+	engine.GET("/ws", manager.ServeWs)
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	engine.GET("/health", s.health)
+	engine.NoRoute(s.noRoute)
+}
 
-	engine.GET("/health", func(ctx *gin.Context) {
-		ctx.Status(http.StatusTeapot)
+func (s *HttpServer) noRoute(ctx *gin.Context) {
+	ctx.JSON(http.StatusNotFound, gin.H{
+		"message": fmt.Sprintf("Route %s not found", ctx.Request.URL),
 	})
+}
 
-	engine.NoRoute(func(ctx *gin.Context) {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"message": fmt.Sprintf("Route %s not found", ctx.Request.URL),
-		})
-	})
+func (s *HttpServer) health(ctx *gin.Context) {
+	ctx.Status(http.StatusTeapot)
 }
