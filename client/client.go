@@ -16,6 +16,7 @@ import (
 )
 
 var addr = flag.String("addr", "home.domain", "http service address")
+var token = flag.String("token", "", "access jwt token")
 
 func main() {
 	flag.Parse()
@@ -27,7 +28,7 @@ func main() {
 	u := url.URL{Scheme: "wss", Host: *addr, Path: "/ws"}
 	log.Printf("\nconnecting to: %s\n", u.String())
 
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), http.Header{"Authorization": []string{"Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODA0MzI0MDksImlhdCI6MTY4MDQzMTUwOSwianRpIjoiMjkyMmY2OTEtN2ExNC00N2Q2LWFjOTMtNDA1NmYwNjk5MDU3IiwibmJmIjoxNjgwNDMxNTA5LCJzdWIiOjF9.rfa478p0FCJfFx_V2TonX4hj-BZ_okfeWPlYACCU7GJNHBn3ym6Iz0yPlZ-uyUBcwyH3hV2KkG13losFutGr_Nx_n_DcLW0RFXttx8QiXE9zA50vZW45fBpQQqGP8gBb3yIZncDg-HksbDTT9fYIfGG_xmXsZrXF-uWAYcQTTaoCophf05pwvTmIoPToj4iK6DCMzUQCsg75GyenoGJ1a3SNWlH_ezcSmrrZIk2htaEJj-zvDHoJpbypDJLPGrbJI0I4i8azjSHiDUf_4MaFmgZR_MxeNE-qXZv0pXhvFe4c9tbiMa96WMBwvLT2mkZA9g_kxoDsOaDS-HeCow8kuhFRzLyBWoawNVtFdAb-PZ3O-klV6QCX1EqtUyiG1kHKxKYN7IZatqsZhFOZhu2VmR8AMqXsly2uQIXzMBVkHaSaof07chMAxOiGK6eZAVk2p0Es3dQWiJ12WL8Z9Is-q2b22E01hmwiPi4h59WOX44KLgr_wLLlAIyEKg-85x33IEwgys24CSti-NTNCy6peTFnD5DWZXZwhhbAPEqZU-mChbAUgASbkLJyt5MHwgeJ7I674GkHnXHmA8OgUFjLMRhd8jE6WqNL3jkxXoKnNxsiw4JfZ4B5RnQrhhH3WHfuimgymZpvpnOB7KsCu2zzPmLIyvThwItP-YOz1kWTIgw"}})
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), http.Header{"Authorization": []string{"Bearer " + *token}})
 	if err != nil {
 		log.Fatal("dial err: ", err)
 	}
