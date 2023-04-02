@@ -105,7 +105,7 @@ func (s *HttpServer) setupRoutes(ctx context.Context, engine *gin.Engine) {
 	}
 
 	manager := ws.NewManager(ctx, s.container, s.config)
-	engine.GET("/ws", manager.ServeWs)
+	engine.GET("/ws", m_auth, manager.ServeWs)
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	engine.GET("/health", s.health)
 	engine.NoRoute(s.noRoute)

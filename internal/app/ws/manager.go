@@ -12,7 +12,6 @@ import (
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/container"
 	"github.com/antnzr/chat-go/internal/app/domain"
-	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -51,29 +50,9 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func (m *Manager) auth(ctx *gin.Context) (*domain.User, error) {
-	accessToken, err := m.container.Service.Token.ExtractAuthToken(ctx)
-	if err != nil {
-		return nil, errs.Unauthorized
-	}
-
-	tokenDetails, err := m.container.Service.Token.ValidateToken(ctx, accessToken, m.config.AccessTokenPublicKey)
-	if err != nil {
-		return nil, errs.Unauthorized
-	}
-
-	user, err := m.container.Service.User.FindById(ctx, tokenDetails.UserId)
-	if err != nil {
-		return nil, errs.Unauthorized
-	}
-
-	return user, nil
-}
-
 func (m *Manager) ServeWs(ctx *gin.Context) {
-	// auth user
-	user, err := m.auth(ctx)
-	if err != nil {
+	user := ctx.MustGet("currentUser").(*domain.User)
+	if user == nil {
 		logger.Debug(`unauthorized user`)
 		return
 	}
