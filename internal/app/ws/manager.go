@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"github.com/antnzr/chat-go/config"
+	"github.com/antnzr/chat-go/internal/app/container"
+	"github.com/antnzr/chat-go/internal/app/domain"
+	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -18,16 +21,22 @@ import (
 
 type Manager struct {
 	sync.RWMutex
-	config   config.Config
-	clients  ClientList
-	handlers map[string]WsEventHandler
+	config    config.Config
+	clients   ClientList
+	container *container.Container
+	handlers  map[string]WsEventHandler
 }
 
-func NewManager(ctx context.Context, config config.Config) *Manager {
+func NewManager(
+	ctx context.Context,
+	container *container.Container,
+	config config.Config,
+) *Manager {
 	manager := &Manager{
-		config:   config,
-		clients:  make(ClientList),
-		handlers: make(map[string]WsEventHandler),
+		config:    config,
+		container: container,
+		clients:   make(ClientList),
+		handlers:  make(map[string]WsEventHandler),
 	}
 
 	manager.setupWsEventHandlers()
@@ -42,14 +51,40 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+func (m *Manager) auth(ctx *gin.Context) (*domain.User, error) {
+	accessToken, err := m.container.Service.Token.ExtractAuthToken(ctx)
+	if err != nil {
+		return nil, errs.Unauthorized
+	}
+
+	tokenDetails, err := m.container.Service.Token.ValidateToken(ctx, accessToken, m.config.AccessTokenPublicKey)
+	if err != nil {
+		return nil, errs.Unauthorized
+	}
+
+	user, err := m.container.Service.User.FindById(ctx, tokenDetails.UserId)
+	if err != nil {
+		return nil, errs.Unauthorized
+	}
+
+	return user, nil
+}
+
 func (m *Manager) ServeWs(ctx *gin.Context) {
+	// auth user
+	user, err := m.auth(ctx)
+	if err != nil {
+		logger.Debug(`unauthorized user`)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil) //upgrade get request to websocket protocol
 	if err != nil {
 		logger.Error(`failed upgrade req: %v`, zap.Error(err))
 		return
 	}
 
-	client := NewClient(conn, m)
+	client := NewClient(conn, user, m)
 	m.addClient(client)
 
 	go client.readMessages()
@@ -101,7 +136,7 @@ func (m *Manager) routeWsEvent(wsEvent WsEvent, c *Client) error {
 }
 
 func (m *Manager) addClient(client *Client) {
-	logger.Info("user connected")
+	logger.Info(fmt.Sprintf("connect user: %s", client.user.Email))
 	m.Lock()
 	defer m.Unlock()
 
@@ -113,13 +148,14 @@ func (m *Manager) removeClient(client *Client) {
 	defer m.Unlock()
 
 	if _, ok := m.clients[client]; ok {
-		logger.Info("user disconnect")
+		logger.Info(fmt.Sprintf("disconnect user: %s", client.user.Email))
 		client.connection.Close()
 		delete(m.clients, client)
 	}
 }
 
 // todo: check origin, origin is empty
+//nolint
 func (m *Manager) checkOrigin(r *http.Request) bool {
 	fmt.Printf("\nOrigin: " + r.Header.Get("Origin") + "\n")
 	// return slices.Contains(m.config.Origin, r.Host)

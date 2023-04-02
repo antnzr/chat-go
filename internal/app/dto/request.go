@@ -29,7 +29,7 @@ type UserSearchQuery struct {
 }
 
 func (u *UserSearchQuery) Validate() error {
-	if u.Limit > utils.MaxLimitPerPage {
+	if u.Limit > utils.MAX_LIMIT_PER_PAGE {
 		return errs.LimitExceeded
 	}
 	if u.Limit < 0 || u.Page < 0 {

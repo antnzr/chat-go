@@ -5,16 +5,19 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
+	"github.com/antnzr/chat-go/internal/app/service"
 	"github.com/gin-gonic/gin"
 
 	_ "github.com/antnzr/chat-go/docs"
 )
 
 type userController struct {
-	userService domain.UserService
+	service service.Service
+	config  config.Config
 }
 
 type UserController interface {
@@ -25,8 +28,8 @@ type UserController interface {
 	FindUserById(ctx *gin.Context)
 }
 
-func NewUserController(us domain.UserService) UserController {
-	return &userController{userService: us}
+func NewUserController(service service.Service, config config.Config) UserController {
+	return &userController{service, config}
 }
 
 // GetMe godoc
@@ -67,7 +70,7 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 		return
 	}
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
-	updated, err := uc.userService.Update(context.TODO(), currentUser.Id, &dto)
+	updated, err := uc.service.User.Update(context.TODO(), currentUser.Id, &dto)
 	if err != nil {
 		_ = ctx.Error(err)
 		return
@@ -92,7 +95,7 @@ func (uc *userController) UpdateUser(ctx *gin.Context) {
 func (uc *userController) DeleteUser(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser").(*domain.User)
 
-	err := uc.userService.Delete(context.TODO(), currentUser.Id)
+	err := uc.service.User.Delete(context.TODO(), currentUser.Id)
 	if err != nil {
 		_ = ctx.Error(err)
 		return
@@ -128,7 +131,7 @@ func (uc *userController) FindUsers(ctx *gin.Context) {
 		return
 	}
 
-	result, err := uc.userService.FindAll(context.TODO(), searchQuery)
+	result, err := uc.service.User.FindAll(context.TODO(), searchQuery)
 	if err != nil {
 		_ = ctx.Error(err)
 		return
@@ -158,7 +161,7 @@ func (uc *userController) FindUserById(ctx *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.FindById(context.TODO(), userId)
+	user, err := uc.service.User.FindById(context.TODO(), userId)
 	if err != nil {
 		_ = ctx.Error(err)
 		return

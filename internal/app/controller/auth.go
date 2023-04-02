@@ -8,15 +8,15 @@ import (
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
+	"github.com/antnzr/chat-go/internal/app/service"
 	"github.com/gin-gonic/gin"
 
 	_ "github.com/antnzr/chat-go/docs"
 )
 
 type authController struct {
-	userService  domain.UserService
-	tokenService domain.TokenService
-	config       config.Config
+	service service.Service
+	config  config.Config
 }
 
 type AuthController interface {
@@ -37,9 +37,8 @@ const (
 	seconds      = 60
 )
 
-func NewAuthController(userService domain.UserService, tokenService domain.TokenService) AuthController {
-	config, _ := config.LoadConfig(".")
-	return &authController{userService, tokenService, config}
+func NewAuthController(service service.Service, config config.Config) AuthController {
+	return &authController{service, config}
 }
 
 // Signup godoc
@@ -57,7 +56,7 @@ func (controller *authController) Signup(ctx *gin.Context) {
 		return
 	}
 
-	_, err := controller.userService.Signup(context.TODO(), &dto)
+	_, err := controller.service.User.Signup(context.TODO(), &dto)
 	if err != nil {
 		_ = ctx.Error(err)
 		return
@@ -83,7 +82,7 @@ func (ac *authController) Login(ctx *gin.Context) {
 		return
 	}
 
-	tokens, err := ac.userService.Login(context.TODO(), &dto)
+	tokens, err := ac.service.User.Login(context.TODO(), &dto)
 	if err != nil {
 		_ = ctx.Error(err)
 		return
@@ -115,7 +114,7 @@ func (ac *authController) Logout(ctx *gin.Context) {
 		return
 	}
 
-	err = ac.userService.Logout(context.TODO(), refreshToken)
+	err = ac.service.User.Logout(context.TODO(), refreshToken)
 	if err != nil {
 		_ = ctx.Error(err)
 		return
@@ -155,7 +154,7 @@ func (ac *authController) Refresh(ctx *gin.Context) {
 		return
 	}
 
-	tokens, err := ac.tokenService.RefreshTokenPair(context.TODO(), refreshToken)
+	tokens, err := ac.service.Token.RefreshTokenPair(context.TODO(), refreshToken)
 	if err != nil {
 		_ = ctx.Error(err)
 		return

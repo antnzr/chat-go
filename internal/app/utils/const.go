@@ -1,5 +1,5 @@
 package utils
 
 const (
-	MaxLimitPerPage = 100
+	MAX_LIMIT_PER_PAGE = 100
 )

@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
@@ -17,19 +16,8 @@ func Auth(
 	config config.Config,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var accessToken string
-		cookie, err := ctx.Cookie("accessToken")
-
-		authorizationHeader := ctx.Request.Header.Get("Authorization")
-		fields := strings.Fields(authorizationHeader)
-
-		if len(fields) != 0 && fields[0] == "Bearer" {
-			accessToken = fields[1]
-		} else if err == nil {
-			accessToken = cookie
-		}
-
-		if accessToken == "" {
+		accessToken, err := tokenService.ExtractAuthToken(ctx)
+		if err != nil {
 			_ = ctx.AbortWithError(http.StatusUnauthorized, errs.Unauthorized)
 			return
 		}

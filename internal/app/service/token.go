@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/antnzr/chat-go/config"
@@ -11,6 +12,7 @@ import (
 	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
@@ -168,4 +170,24 @@ func (ts *tokenService) createToken(
 	}
 
 	return td, nil
+}
+
+func (ts *tokenService) ExtractAuthToken(ctx *gin.Context) (string, error) {
+	var accessToken string
+	cookie, err := ctx.Cookie("accessToken")
+
+	authorizationHeader := ctx.Request.Header.Get("Authorization")
+	fields := strings.Fields(authorizationHeader)
+
+	if len(fields) != 0 && fields[0] == "Bearer" {
+		accessToken = fields[1]
+	} else if err == nil {
+		accessToken = cookie
+	}
+
+	if accessToken == "" {
+		return "", errs.Unauthorized
+	}
+
+	return accessToken, nil
 }

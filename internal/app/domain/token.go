@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Token struct {
@@ -29,6 +31,7 @@ type TokenService interface {
 	DeleteByUser(ctx context.Context, userId int) error
 	ValidateToken(ctx context.Context, tokenStr string, secret string) (*TokenDetails, error)
 	RefreshTokenPair(ctx context.Context, refreshToken string) (*Tokens, error)
+	ExtractAuthToken(ctx *gin.Context) (string, error)
 }
 
 type TokenRepository interface {

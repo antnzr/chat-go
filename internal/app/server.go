@@ -8,11 +8,7 @@ import (
 	"sync"
 
 	"github.com/antnzr/chat-go/config"
-	"github.com/antnzr/chat-go/internal/app/controller"
-	"github.com/antnzr/chat-go/internal/app/middleware"
-	"github.com/antnzr/chat-go/internal/app/repository"
-	"github.com/antnzr/chat-go/internal/app/service"
-	"github.com/gin-gonic/gin"
+	"github.com/antnzr/chat-go/internal/app/container"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -27,14 +23,13 @@ func NewServer(config config.Config, pgPool *pgxpool.Pool) *Server {
 	return &Server{config: config, pgPool: pgPool}
 }
 
-// Run starts the HTTP server
-// todo: and gRPC server
+// Run the HTTP server
 func (s *Server) Run(ctx context.Context) (err error) {
 	var ec = make(chan error, 1)
 	ctx, cancel := context.WithCancel(ctx)
 
-	container := buildDeps(s.config, s.pgPool)
-	s.httpSrv = NewHttpServer(s.config, *container)
+	container := container.NewContainer(s.config, s.pgPool)
+	s.httpSrv = NewHttpServer(s.config, container)
 
 	go func() {
 		err := s.httpSrv.Run(ctx)
@@ -72,30 +67,3 @@ func (s *Server) Shutdown(ctx context.Context) {
 	})
 }
 
-type Container struct {
-	Controller  controller.Controller
-	Middlewares map[string]gin.HandlerFunc
-}
-
-func buildDeps(config config.Config, db *pgxpool.Pool) *Container {
-	userRepository := repository.NewUserRepository(db)
-	tokenRepository := repository.NewTokneRepository(db)
-	store := repository.NewStore(userRepository, tokenRepository)
-
-	tokenService := service.NewTokenService(store)
-	userService := service.NewUserService(store, tokenService)
-
-	authController := controller.NewAuthController(userService, tokenService)
-	userController := controller.NewUserController(userService)
-
-	controller := controller.NewController(authController, userController)
-	auth := middleware.Auth(tokenService, userService, config)
-
-	middlewares := make(map[string]gin.HandlerFunc)
-	middlewares["auth"] = auth
-
-	return &Container{
-		Controller:  *controller,
-		Middlewares: middlewares,
-	}
-}

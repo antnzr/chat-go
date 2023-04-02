@@ -2,8 +2,10 @@ package ws
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
+	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -18,15 +20,17 @@ type ClientList map[*Client]bool
 
 type Client struct {
 	connection *websocket.Conn
+	user       *domain.User
 	manager    *Manager
 	chatroom   string
 	egress     chan WsEvent // is used to avoid concurrent writes on the WebSocket
 }
 
-func NewClient(conn *websocket.Conn, manager *Manager) *Client {
+func NewClient(conn *websocket.Conn, user *domain.User, manager *Manager) *Client {
 	return &Client{
 		connection: conn,
 		manager:    manager,
+		user:       user,
 		egress:     make(chan WsEvent),
 	}
 }
@@ -46,8 +50,10 @@ func (c *Client) readMessages() {
 		_, payload, err := c.connection.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				logger.Error("error reading message: %v", zap.Error(err))
+				logger.Debug("close: %v", zap.Error(err))
+				return
 			}
+			logger.Error("read err: %v", zap.Error(err))
 			return
 		}
 
@@ -92,6 +98,9 @@ func (c *Client) writeMessages() {
 			}
 		case <-ticker.C:
 			if err := c.connection.WriteMessage(websocket.PingMessage, []byte(``)); err != nil {
+				if strings.Contains(err.Error(), "websocket: close sent") {
+					return
+				}
 				logger.Error("ping err: %v\n", zap.Error(err))
 				return
 			}
@@ -100,6 +109,5 @@ func (c *Client) writeMessages() {
 }
 
 func (c *Client) pongHandler(pongMsg string) error {
-	logger.Debug("pong")
 	return c.connection.SetReadDeadline(time.Now().Add(pongWait))
 }

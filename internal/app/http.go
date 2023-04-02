@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/antnzr/chat-go/config"
+	"github.com/antnzr/chat-go/internal/app/container"
 	"github.com/antnzr/chat-go/internal/app/middleware"
 	"github.com/antnzr/chat-go/internal/app/ws"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
@@ -20,13 +21,13 @@ import (
 
 type HttpServer struct {
 	config    config.Config
-	container Container
+	container *container.Container
 	http      *http.Server
 }
 
 func NewHttpServer(
 	config config.Config,
-	container Container,
+	container *container.Container,
 ) *HttpServer {
 	return &HttpServer{
 		config:    config,
@@ -103,7 +104,7 @@ func (s *HttpServer) setupRoutes(ctx context.Context, engine *gin.Engine) {
 		}
 	}
 
-	manager := ws.NewManager(ctx, s.config)
+	manager := ws.NewManager(ctx, s.container, s.config)
 	engine.GET("/ws", manager.ServeWs)
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	engine.GET("/health", s.health)
