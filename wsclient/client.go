@@ -1,3 +1,4 @@
+//go:build exclude
 package main
 
 import (
@@ -17,6 +18,7 @@ import (
 
 var addr = flag.String("addr", "home.domain", "http service address")
 var token = flag.String("token", "", "access jwt token")
+var receiver = flag.Int("to", 0, "receiver")
 
 func main() {
 	flag.Parse()
@@ -49,7 +51,7 @@ func main() {
 		}
 	}()
 
-	ticker := time.NewTicker(time.Second * 3)
+	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
 
 	pong := make(chan struct{})
@@ -64,7 +66,10 @@ func main() {
 		case <-done:
 			return
 		case t := <-ticker.C:
-			data, _ := json.Marshal(map[string]string{"message": fmt.Sprintf("Hello muchacho: %s", t.String())})
+			data, _ := json.Marshal(map[string]interface{}{
+				"message": fmt.Sprintf("Hello from [%d]: %s", *receiver, t.String()),
+				"receiver": receiver,
+			})
 
 			request := ws.WsEvent{
 				Type:    ws.SEND_MESSAGE_EVENT,

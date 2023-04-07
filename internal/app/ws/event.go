@@ -18,12 +18,13 @@ const (
 )
 
 type SendMessageEvent struct {
-	Message string `json:"message"`
-	From    string `json:"from"`
+	Message  string `json:"message"`
+	Receiver int    `json:"receiver"`
 }
 
 type NewMessageEvent struct {
 	SendMessageEvent
+	From     int       `json:"from"`
 	Receiver Client    `json:"receiver"`
 	SentAt   time.Time `json:"sentAt"`
 }

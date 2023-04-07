@@ -81,12 +81,16 @@ func SendMessage(wsEvent WsEvent, c *Client) error {
 		return fmt.Errorf("bad payload %v\n", err)
 	}
 
-	var broadMessage NewMessageEvent
-	broadMessage.Message = chatevent.Message
-	broadMessage.From = chatevent.From
-	broadMessage.SentAt = time.Now()
+	if chatevent.Receiver == 0 {
+		return fmt.Errorf("receiver is required")
+	}
 
-	data, err := json.Marshal(broadMessage)
+	var newMessage NewMessageEvent
+	newMessage.Message = chatevent.Message
+	newMessage.From = c.user.Id
+	newMessage.SentAt = time.Now()
+
+	data, err := json.Marshal(newMessage)
 	if err != nil {
 		return fmt.Errorf("failed unmarshall data %v\n", err)
 	}
@@ -96,11 +100,11 @@ func SendMessage(wsEvent WsEvent, c *Client) error {
 		Type:    NEW_MESSAGE_EVENT,
 	}
 
-	for client := range c.manager.clients {
-		if client.chatroom == c.chatroom {
-			client.egress <- outgoingEvent
-		}
+	receiver := c.manager.clients[chatevent.Receiver]
+	if receiver != nil {
+		receiver.egress <- outgoingEvent
 	}
+
 	return nil
 }
 
@@ -119,22 +123,22 @@ func (m *Manager) addClient(client *Client) {
 	m.Lock()
 	defer m.Unlock()
 
-	m.clients[client] = true
+	m.clients[client.user.Id] = client
 }
 
 func (m *Manager) removeClient(client *Client) {
 	m.Lock()
 	defer m.Unlock()
 
-	if _, ok := m.clients[client]; ok {
+	if _, ok := m.clients[client.user.Id]; ok {
 		logger.Info(fmt.Sprintf("disconnect user: %s", client.user.Email))
 		client.connection.Close()
-		delete(m.clients, client)
+		delete(m.clients, client.user.Id)
 	}
 }
 
 // todo: check origin, origin is empty
-//nolint
+// nolint
 func (m *Manager) checkOrigin(r *http.Request) bool {
 	fmt.Printf("\nOrigin: " + r.Header.Get("Origin") + "\n")
 	// return slices.Contains(m.config.Origin, r.Host)
