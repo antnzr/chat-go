@@ -82,6 +82,7 @@ func SendMessage(wsEvent WsEvent, c *Client) error {
 	}
 
 	if chatevent.Receiver == 0 {
+		sendError("receiver is required", c)
 		return fmt.Errorf("receiver is required")
 	}
 
@@ -143,4 +144,14 @@ func (m *Manager) checkOrigin(r *http.Request) bool {
 	fmt.Printf("\nOrigin: " + r.Header.Get("Origin") + "\n")
 	// return slices.Contains(m.config.Origin, r.Host)
 	return true
+}
+
+func sendError(msg string, c *Client) {
+	errMsg, _ := json.Marshal(ErrorEvent{
+		Message: msg,
+	})
+	c.egress <- WsEvent{
+		Payload: errMsg,
+		Type:    ERROR_EVENT,
+	}
 }
