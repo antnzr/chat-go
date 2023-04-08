@@ -22,8 +22,7 @@ type tokenService struct {
 	config config.Config
 }
 
-func NewTokenService(store *repository.Store) domain.TokenService {
-	config, _ := config.LoadConfig(".")
+func NewTokenService(store *repository.Store, config config.Config) domain.TokenService {
 	return &tokenService{store, config}
 }
 

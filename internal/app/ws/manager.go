@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/container"
 	"github.com/antnzr/chat-go/internal/app/domain"
+	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -74,7 +74,19 @@ func (m *Manager) setupWsEventHandlers() {
 	m.handlers[SEND_MESSAGE_EVENT] = SendMessage
 }
 
-func SendMessage(wsEvent WsEvent, c *Client) error {
+func saveMessage(event SendMessageEvent, client *Client) (*domain.Message, error) {
+	result, err := client.manager.container.Service.Message.SendMessage(context.TODO(), &dto.SendMessageRequest{
+		SourceUserId: client.user.Id,
+		TargetUserId: event.Receiver,
+		Text:         event.Message,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func SendMessage(wsEvent WsEvent, client *Client) error {
 	fmt.Println(string(wsEvent.Payload))
 	var chatevent SendMessageEvent
 	if err := json.Unmarshal(wsEvent.Payload, &chatevent); err != nil {
@@ -82,16 +94,16 @@ func SendMessage(wsEvent WsEvent, c *Client) error {
 	}
 
 	if chatevent.Receiver == 0 {
-		sendError("receiver is required", c)
+		sendError("receiver is required", client)
 		return fmt.Errorf("receiver is required")
 	}
 
-	var newMessage NewMessageEvent
-	newMessage.Message = chatevent.Message
-	newMessage.From = c.user.Id
-	newMessage.SentAt = time.Now()
+	msg, err := saveMessage(chatevent, client)
+	if err != nil {
+		return err
+	}
 
-	data, err := json.Marshal(newMessage)
+	data, err := json.Marshal(&NewMessageEvent{Message: *msg})
 	if err != nil {
 		return fmt.Errorf("failed unmarshall data %v\n", err)
 	}
@@ -101,7 +113,8 @@ func SendMessage(wsEvent WsEvent, c *Client) error {
 		Type:    NEW_MESSAGE_EVENT,
 	}
 
-	receiver := c.manager.clients[chatevent.Receiver]
+	client.egress <- outgoingEvent
+	receiver := client.manager.clients[chatevent.Receiver]
 	if receiver != nil {
 		receiver.egress <- outgoingEvent
 	}

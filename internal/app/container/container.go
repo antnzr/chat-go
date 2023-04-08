@@ -20,12 +20,14 @@ type Container struct {
 func NewContainer(config config.Config, db *pgxpool.Pool) *Container {
 	userRepository := repository.NewUserRepository(db)
 	tokenRepository := repository.NewTokneRepository(db)
-	store := repository.NewStore(userRepository, tokenRepository)
+	messageRepository := repository.NewMessageRepository(db)
+	store := repository.NewStore(userRepository, tokenRepository, messageRepository)
 
-	tokenService := service.NewTokenService(store)
-	userService := service.NewUserService(store, tokenService)
+	tokenService := service.NewTokenService(store, config)
+	userService := service.NewUserService(store, config, tokenService)
+	messageService := service.NewMessageService(store, config)
 
-	serv := service.NewService(userService, tokenService)
+	serv := service.NewService(userService, tokenService, messageService)
 
 	authController := controller.NewAuthController(*serv, config)
 	userController := controller.NewUserController(*serv, config)

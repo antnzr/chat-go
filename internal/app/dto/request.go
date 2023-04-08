@@ -37,3 +37,9 @@ func (u *UserSearchQuery) Validate() error {
 	}
 	return nil
 }
+
+type SendMessageRequest struct {
+	SourceUserId int
+	TargetUserId int
+	Text         string
+}

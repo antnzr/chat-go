@@ -2,7 +2,8 @@ package ws
 
 import (
 	"encoding/json"
-	"time"
+
+	"github.com/antnzr/chat-go/internal/app/domain"
 )
 
 type WsEvent struct {
@@ -28,8 +29,5 @@ type SendMessageEvent struct {
 }
 
 type NewMessageEvent struct {
-	SendMessageEvent
-	From     int       `json:"from"`
-	Receiver Client    `json:"receiver"`
-	SentAt   time.Time `json:"sentAt"`
+	Message domain.Message `json:"message"`
 }

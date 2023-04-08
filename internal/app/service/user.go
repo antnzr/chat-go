@@ -17,8 +17,11 @@ type userService struct {
 	tokenService domain.TokenService
 }
 
-func NewUserService(store *repository.Store, tokenService domain.TokenService) domain.UserService {
-	config, _ := config.LoadConfig(".")
+func NewUserService(
+	store *repository.Store,
+	config config.Config,
+	tokenService domain.TokenService,
+) domain.UserService {
 	return &userService{store, config, tokenService}
 }
 
