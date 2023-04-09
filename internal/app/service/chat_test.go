@@ -33,12 +33,12 @@ func TestCreateMessage(t *testing.T) {
 	s := setup(t)
 	defer s(t)
 
-	t.Log("Create message")
+	t.Log("Create Chat Message")
 	{
-		t.Log("Create message with new dialog")
+		t.Log("Create message with new chat")
 		{
 			text := gofakeit.Phrase()
-			res, err := messageSrvc.CreateMessage(context.TODO(), &dto.SendMessageRequest{
+			res, err := chatSrvc.CreateMessage(context.TODO(), &dto.SendMessageRequest{
 				SourceUserId: user1.Id,
 				TargetUserId: user2.Id,
 				Text:         text,
@@ -47,22 +47,22 @@ func TestCreateMessage(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, text, res.Text)
 		}
-		t.Log("Create message with existed dialog")
+		t.Log("Create message with existed chat")
 		{
 			text := gofakeit.Phrase()
-			res, err := messageSrvc.CreateMessage(context.TODO(), &dto.SendMessageRequest{
+			res, err := chatSrvc.CreateMessage(context.TODO(), &dto.SendMessageRequest{
 				SourceUserId: user1.Id,
 				TargetUserId: user2.Id,
 				Text:         text,
 			})
 
-			var dialogCount int
-			_ = testDbInstance.QueryRow(context.TODO(), "SELECT COUNT(*) FROM dialogs;").Scan(&dialogCount)
+			var chat int
+			_ = testDbInstance.QueryRow(context.TODO(), "SELECT COUNT(*) FROM chats;").Scan(&chat)
 			var messageCount int
 			_ = testDbInstance.QueryRow(context.TODO(), "SELECT COUNT(*) FROM messages;").Scan(&messageCount)
 
 			assert.NoError(t, err)
-			assert.Equal(t, 1, dialogCount)
+			assert.Equal(t, 1, chat)
 			assert.Equal(t, 2, messageCount)
 			assert.Equal(t, text, res.Text)
 		}

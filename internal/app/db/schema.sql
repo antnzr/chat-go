@@ -98,10 +98,10 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: dialogs; Type: TABLE; Schema: public; Owner: -
+-- Name: chats; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.dialogs (
+CREATE TABLE public.chats (
     id integer NOT NULL,
     name character varying(255),
     last_message_id integer,
@@ -111,10 +111,10 @@ CREATE TABLE public.dialogs (
 
 
 --
--- Name: dialogs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: chats_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.dialogs_id_seq
+CREATE SEQUENCE public.chats_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -124,10 +124,10 @@ CREATE SEQUENCE public.dialogs_id_seq
 
 
 --
--- Name: dialogs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: chats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.dialogs_id_seq OWNED BY public.dialogs.id;
+ALTER SEQUENCE public.chats_id_seq OWNED BY public.chats.id;
 
 
 --
@@ -139,7 +139,7 @@ CREATE TABLE public.messages (
     text text,
     owner_id integer,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    dialog_id integer
+    chat_id integer
 );
 
 
@@ -185,22 +185,22 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: user_dialogs; Type: TABLE; Schema: public; Owner: -
+-- Name: user_chats; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.user_dialogs (
+CREATE TABLE public.user_chats (
     id integer NOT NULL,
     user_id integer NOT NULL,
-    dialog_id integer NOT NULL,
+    chat_id integer NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
 --
--- Name: user_dialogs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: user_chats_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.user_dialogs_id_seq
+CREATE SEQUENCE public.user_chats_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -210,10 +210,10 @@ CREATE SEQUENCE public.user_dialogs_id_seq
 
 
 --
--- Name: user_dialogs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: user_chats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.user_dialogs_id_seq OWNED BY public.user_dialogs.id;
+ALTER SEQUENCE public.user_chats_id_seq OWNED BY public.user_chats.id;
 
 
 --
@@ -252,10 +252,10 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: dialogs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: chats id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.dialogs ALTER COLUMN id SET DEFAULT nextval('public.dialogs_id_seq'::regclass);
+ALTER TABLE ONLY public.chats ALTER COLUMN id SET DEFAULT nextval('public.chats_id_seq'::regclass);
 
 
 --
@@ -266,10 +266,10 @@ ALTER TABLE ONLY public.messages ALTER COLUMN id SET DEFAULT nextval('public.mes
 
 
 --
--- Name: user_dialogs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: user_chats id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.user_dialogs ALTER COLUMN id SET DEFAULT nextval('public.user_dialogs_id_seq'::regclass);
+ALTER TABLE ONLY public.user_chats ALTER COLUMN id SET DEFAULT nextval('public.user_chats_id_seq'::regclass);
 
 
 --
@@ -280,11 +280,11 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
--- Name: dialogs dialogs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: chats chats_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.dialogs
-    ADD CONSTRAINT dialogs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.chats
+    ADD CONSTRAINT chats_pkey PRIMARY KEY (id);
 
 
 --
@@ -312,19 +312,19 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- Name: user_dialogs user_dialogs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_chats user_chats_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.user_dialogs
-    ADD CONSTRAINT user_dialogs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.user_chats
+    ADD CONSTRAINT user_chats_pkey PRIMARY KEY (id);
 
 
 --
--- Name: user_dialogs user_dialogs_user_id_dialog_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_chats user_chats_user_id_chat_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.user_dialogs
-    ADD CONSTRAINT user_dialogs_user_id_dialog_id_key UNIQUE (user_id, dialog_id);
+ALTER TABLE ONLY public.user_chats
+    ADD CONSTRAINT user_chats_user_id_chat_id_key UNIQUE (user_id, chat_id);
 
 
 --
@@ -344,17 +344,17 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: dialog_message_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: chat_message_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX dialog_message_idx ON public.messages USING btree (dialog_id);
+CREATE INDEX chat_message_idx ON public.messages USING btree (chat_id);
 
 
 --
--- Name: dialog_user_dialogs_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: chat_user_chat_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX dialog_user_dialogs_idx ON public.user_dialogs USING btree (dialog_id);
+CREATE INDEX chat_user_chat_idx ON public.user_chats USING btree (chat_id);
 
 
 --
@@ -365,10 +365,10 @@ CREATE INDEX owner_message_idx ON public.messages USING btree (owner_id);
 
 
 --
--- Name: user_user_dialogs_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: user_user_chat_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX user_user_dialogs_idx ON public.user_dialogs USING btree (user_id);
+CREATE INDEX user_user_chat_idx ON public.user_chats USING btree (user_id);
 
 
 --
@@ -379,19 +379,19 @@ CREATE TRIGGER users_set_timestamp BEFORE UPDATE ON public.users FOR EACH ROW EX
 
 
 --
--- Name: dialogs dialogs_last_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: chats chats_last_message_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.dialogs
-    ADD CONSTRAINT dialogs_last_message_id_fkey FOREIGN KEY (last_message_id) REFERENCES public.messages(id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.chats
+    ADD CONSTRAINT chats_last_message_id_fkey FOREIGN KEY (last_message_id) REFERENCES public.messages(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: messages messages_dialog_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: messages messages_chat_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_dialog_id_fkey FOREIGN KEY (dialog_id) REFERENCES public.dialogs(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT messages_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.chats(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -411,19 +411,19 @@ ALTER TABLE ONLY public.refresh_tokens
 
 
 --
--- Name: user_dialogs user_dialogs_dialog_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_chats user_chats_chat_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.user_dialogs
-    ADD CONSTRAINT user_dialogs_dialog_id_fkey FOREIGN KEY (dialog_id) REFERENCES public.dialogs(id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.user_chats
+    ADD CONSTRAINT user_chats_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.chats(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: user_dialogs user_dialogs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_chats user_chats_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.user_dialogs
-    ADD CONSTRAINT user_dialogs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.user_chats
+    ADD CONSTRAINT user_chats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --

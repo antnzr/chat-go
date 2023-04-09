@@ -75,7 +75,7 @@ func (m *Manager) setupWsEventHandlers() {
 }
 
 func saveMessage(event SendMessageEvent, client *Client) (*domain.Message, error) {
-	result, err := client.manager.container.Service.Message.CreateMessage(context.TODO(), &dto.SendMessageRequest{
+	result, err := client.manager.container.Service.Chat.CreateMessage(context.TODO(), &dto.SendMessageRequest{
 		SourceUserId: client.user.Id,
 		TargetUserId: event.Receiver,
 		Text:         event.Message,

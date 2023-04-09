@@ -5,19 +5,19 @@ import (
 )
 
 type Store struct {
-	User    domain.UserRepository
-	Token   domain.TokenRepository
-	Message domain.MessageRepository
+	User  domain.UserRepository
+	Token domain.TokenRepository
+	Chat  domain.ChatRepository
 }
 
 func NewStore(
 	userRepo domain.UserRepository,
 	tokenRepo domain.TokenRepository,
-	messageRepo domain.MessageRepository,
+	chatRepo domain.ChatRepository,
 ) *Store {
 	return &Store{
-		User:    userRepo,
-		Token:   tokenRepo,
-		Message: messageRepo,
+		User:  userRepo,
+		Token: tokenRepo,
+		Chat:  chatRepo,
 	}
 }

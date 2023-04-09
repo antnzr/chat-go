@@ -20,19 +20,20 @@ type Container struct {
 func NewContainer(config config.Config, db *pgxpool.Pool) *Container {
 	userRepository := repository.NewUserRepository(db)
 	tokenRepository := repository.NewTokneRepository(db)
-	messageRepository := repository.NewMessageRepository(db)
-	store := repository.NewStore(userRepository, tokenRepository, messageRepository)
+	chatRepository := repository.NewChatRepository(db)
+	store := repository.NewStore(userRepository, tokenRepository, chatRepository)
 
 	tokenService := service.NewTokenService(store, config)
 	userService := service.NewUserService(store, config, tokenService)
-	messageService := service.NewMessageService(store, config)
+	chatService := service.NewChatService(store, config)
 
-	serv := service.NewService(userService, tokenService, messageService)
+	serv := service.NewService(userService, tokenService, chatService)
 
 	authController := controller.NewAuthController(*serv, config)
 	userController := controller.NewUserController(*serv, config)
+	chatController := controller.NewChatController(*serv, config)
 
-	controller := controller.NewController(authController, userController)
+	controller := controller.NewController(authController, userController, chatController)
 	auth := middleware.Auth(tokenService, userService, config)
 
 	middlewares := make(map[string]gin.HandlerFunc)

@@ -13,7 +13,7 @@ import (
 
 var testDbInstance *pgxpool.Pool
 var userSrvc domain.UserService
-var messageSrvc domain.MessageService
+var chatSrvc domain.ChatService
 var conf config.Config
 
 func TestMain(m *testing.M) {
@@ -35,10 +35,10 @@ func TestMain(m *testing.M) {
 func buildDeps() {
 	userRepository := repository.NewUserRepository(testDbInstance)
 	tokenRepository := repository.NewTokneRepository(testDbInstance)
-	messageRepository := repository.NewMessageRepository(testDbInstance)
-	store := repository.NewStore(userRepository, tokenRepository, messageRepository)
+	chatRepository := repository.NewChatRepository(testDbInstance)
+	store := repository.NewStore(userRepository, tokenRepository, chatRepository)
 
 	tokenService := NewTokenService(store, conf)
 	userSrvc = NewUserService(store, conf, tokenService)
-	messageSrvc = NewMessageService(store, conf)
+	chatSrvc = NewChatService(store, conf)
 }
