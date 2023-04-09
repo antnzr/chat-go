@@ -84,6 +84,7 @@ func (s *HttpServer) setupRoutes(ctx context.Context, engine *gin.Engine) {
 	m_auth := s.container.Middlewares["auth"]
 	authController := s.container.Controller.Auth
 	userController := s.container.Controller.User
+	chatController := s.container.Controller.Chat
 
 	{
 		auth := v1.Group("/auth")
@@ -101,6 +102,11 @@ func (s *HttpServer) setupRoutes(ctx context.Context, engine *gin.Engine) {
 			users.GET("/", m_auth, userController.FindUsers)
 			users.PATCH("/", m_auth, userController.UpdateUser)
 			users.DELETE("/", m_auth, userController.DeleteUser)
+		}
+
+		chats := v1.Group("/chats")
+		{
+			chats.GET("/", m_auth, chatController.GetMyChats)
 		}
 	}
 

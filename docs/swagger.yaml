@@ -139,6 +139,32 @@ paths:
       summary: Signup user
       tags:
       - Authentication
+  /chats:
+    get:
+      description: Get my chats
+      parameters:
+      - description: Limit per page default 20
+        in: query
+        name: limit
+        type: integer
+      - description: Page number default 1
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SearchResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Get my chats
+      tags:
+      - Chat
   /users:
     delete:
       description: Delete user

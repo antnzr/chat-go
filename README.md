@@ -11,6 +11,7 @@
 | users    | GET         | /api/v1/users        | Find users               |
 | users    | PATCH       | /api/v1/users        | Update user              |
 | users    | DELETE      | /api/v1/users        | Delete user              |
+| chats    | GET         | /api/v1/chats        | Find my chats            |
 |          |             | /swagger/index.html  | Api docs                 |
 
 #### TOOLS:

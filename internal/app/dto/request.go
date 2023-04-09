@@ -22,20 +22,34 @@ type LoginRequest struct {
 	Password string `json:"password,omitempty" binding:"required"`
 }
 
-type UserSearchQuery struct {
-	Limit int     `form:"limit,default=20"`
-	Page  int     `form:"page,default=1"`
-	Email *string `form:"email"`
+type Search interface {
+	Validate() error
 }
 
-func (u *UserSearchQuery) Validate() error {
-	if u.Limit > utils.MAX_LIMIT_PER_PAGE {
+type AbstractSearch struct {
+	Limit int `form:"limit,default=20"`
+	Page  int `form:"page,default=1"`
+	Search
+}
+
+func (as *AbstractSearch) Validate() error {
+	if as.Limit > utils.MAX_LIMIT_PER_PAGE {
 		return errs.LimitExceeded
 	}
-	if u.Limit < 0 || u.Page < 0 {
+	if as.Limit < 0 || as.Page < 0 {
 		return errs.BadRequest
 	}
 	return nil
+}
+
+type UserSearchQuery struct {
+	*AbstractSearch
+	Email *string `form:"email"`
+}
+
+type ChatSearchQuery struct {
+	*AbstractSearch
+	UserId int `json:"-"`
 }
 
 type SendMessageRequest struct {

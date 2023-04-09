@@ -3,9 +3,12 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
+	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -20,8 +23,8 @@ func NewChatRepository(db *pgxpool.Pool) domain.ChatRepository {
 	}
 }
 
-func (mr *chatRepository) CreateMessage(ctx context.Context, dto *dto.SendMessageRequest) (*domain.Message, error) {
-	conn, err := mr.DB.Acquire(ctx)
+func (cr *chatRepository) CreateMessage(ctx context.Context, dto *dto.SendMessageRequest) (*domain.Message, error) {
+	conn, err := cr.DB.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -52,18 +55,18 @@ func (mr *chatRepository) CreateMessage(ctx context.Context, dto *dto.SendMessag
 	}
 
 	if chatId == 0 {
-		chatId, err = mr.createChat(trx, ctx, *dto)
+		chatId, err = cr.createChat(trx, ctx, *dto)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	msg, err := mr.createMessage(trx, ctx, dto.SourceUserId, chatId, dto.Text)
+	msg, err := cr.createMessage(trx, ctx, dto.SourceUserId, chatId, dto.Text)
 	if err != nil {
 		return nil, err
 	}
 
-	err = mr.saveLastMsgToChat(trx, ctx, chatId, msg.Id)
+	err = cr.saveLastMsgToChat(trx, ctx, chatId, msg.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +74,7 @@ func (mr *chatRepository) CreateMessage(ctx context.Context, dto *dto.SendMessag
 	return msg, nil
 }
 
-func (mr *chatRepository) saveLastMsgToChat(
+func (cr *chatRepository) saveLastMsgToChat(
 	trx pgx.Tx,
 	ctx context.Context,
 	chatId int,
@@ -81,7 +84,7 @@ func (mr *chatRepository) saveLastMsgToChat(
 	return err
 }
 
-func (mr *chatRepository) createChat(
+func (cr *chatRepository) createChat(
 	trx pgx.Tx,
 	ctx context.Context,
 	dto dto.SendMessageRequest,
@@ -109,7 +112,7 @@ func (mr *chatRepository) createChat(
 	return chatId, nil
 }
 
-func (mr *chatRepository) createMessage(
+func (cr *chatRepository) createMessage(
 	trx pgx.Tx,
 	ctx context.Context,
 	ownerId int,
@@ -129,4 +132,112 @@ func (mr *chatRepository) createMessage(
 		return nil, err
 	}
 	return message, nil
+}
+
+func (cr *chatRepository) FindChats(
+	ctx context.Context,
+	searchQuery dto.ChatSearchQuery,
+) (int, []dto.ChatResponse, error) {
+	var (
+		fields = []string{}
+		args   = []any{}
+	)
+
+	if searchQuery.UserId != 0 {
+		fields = append(fields, " uc.user_id = $1")
+		args = append(args, searchQuery.UserId)
+	}
+
+	var where string
+	if len(fields) > 0 {
+		where = " WHERE " + strings.Join(fields, " AND ")
+	}
+
+	// skip chats without last message
+	totalQuery := fmt.Sprintf(`
+		SELECT COUNT(*) AS total
+		FROM user_chats AS uc
+		JOIN chats AS c
+			ON c.id = uc.chat_id
+		JOIN messages AS m
+			ON c.last_message_id = m.id
+		%s;
+	`, where)
+	var total int
+	err := cr.DB.QueryRow(ctx, totalQuery, args...).Scan(&total)
+
+	if err != nil {
+		return 0, nil, errs.ClarifyError(err)
+	}
+
+	if total == 0 {
+		return 0, nil, nil
+	}
+
+	sql := fmt.Sprintf(`
+		SELECT c.id, c.name, c.description, c.last_message_id, c.created_at,
+				 m.id AS message_id, m.owner_id AS message_owner, m.text AS message_text,
+				 m.chat_id AS chat_id, m.created_at AS message_created_at
+		FROM user_chats AS uc
+		JOIN chats AS c
+			ON c.id = uc.chat_id
+		JOIN messages AS m
+			ON c.last_message_id = m.id
+		%s
+		ORDER BY c.created_at DESC
+	`, where)
+
+	args = append(args, searchQuery.Limit)
+	sql += fmt.Sprintf(` LIMIT $%d`, len(args))
+
+	args = append(args, (searchQuery.Page-1)*searchQuery.Limit)
+	sql += fmt.Sprintf(` OFFSET $%d`, len(args))
+
+	rows, err := cr.DB.Query(ctx, sql, args...)
+
+	if err != nil {
+		return 0, nil, errs.ClarifyError(err)
+	}
+	defer rows.Close()
+
+	chats, err := scan(rows)
+	if err != nil {
+		return 0, nil, errs.ClarifyError(err)
+	}
+
+	return total, chats, nil
+}
+
+func scan(rows pgx.Rows) ([]dto.ChatResponse, error) {
+	var chats []dto.ChatResponse
+	for rows.Next() {
+		chat, err := scanRowsIntoChat(rows)
+		if err != nil {
+			return nil, err
+		}
+		chats = append(chats, *chat)
+	}
+	return chats, nil
+}
+
+func scanRowsIntoChat(rows pgx.Rows) (*dto.ChatResponse, error) {
+	chat := new(dto.ChatResponse)
+	chat.LastMessage = new(dto.MessageResponse)
+
+	err := rows.Scan(
+		&chat.Id,
+		&chat.Name,
+		&chat.Description,
+		&chat.LastMessageId,
+		&chat.CreatedAt,
+		&chat.LastMessage.Id,
+		&chat.LastMessage.OwnerId,
+		&chat.LastMessage.Text,
+		&chat.LastMessage.ChatId,
+		&chat.LastMessage.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return chat, nil
 }

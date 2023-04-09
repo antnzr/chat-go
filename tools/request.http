@@ -87,3 +87,13 @@ Cookie: {{login.response.headers.Set-Cookie}}
 DELETE  {{baseUrl}}/users
 Content-Type: application/json
 Cookie: {{login.response.headers.Set-Cookie}}
+
+###
+
+# @name findMyChats
+
+GET {{baseUrl}}/chats?page=1
+Content-Type: application/json
+Cookie: {{login.response.headers.Set-Cookie}}
+
+###
