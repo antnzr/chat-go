@@ -66,4 +66,3 @@ func (s *Server) Shutdown(ctx context.Context) {
 		s.httpSrv.Shutdown(ctx)
 	})
 }
-

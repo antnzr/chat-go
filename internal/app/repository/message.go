@@ -32,9 +32,9 @@ func (mr *messageRepository) CreateMessage(ctx context.Context, dto *dto.SendMes
 	}
 	defer func() {
 		if err != nil {
-			trx.Rollback(ctx)
+			_ = trx.Rollback(ctx)
 		} else {
-			trx.Commit(ctx)
+			_ = trx.Commit(ctx)
 		}
 	}()
 
@@ -45,7 +45,10 @@ func (mr *messageRepository) CreateMessage(ctx context.Context, dto *dto.SendMes
 		HAVING COUNT(*) = 2;
 	`
 	var dialogId int
-	trx.QueryRow(ctx, findDialogIdQuery, dto.SourceUserId, dto.TargetUserId).Scan(&dialogId)
+	err = trx.QueryRow(ctx, findDialogIdQuery, dto.SourceUserId, dto.TargetUserId).Scan(&dialogId)
+	if err != nil {
+		return nil, err
+	}
 
 	if dialogId == 0 {
 		dialogId, err = mr.createDialog(trx, ctx, *dto)
@@ -83,9 +86,12 @@ func (mr *messageRepository) createDialog(
 	dto dto.SendMessageRequest,
 ) (int, error) {
 	var dialogId int
-	trx.QueryRow(ctx, "INSERT INTO dialogs VALUES(DEFAULT) RETURNING id;").Scan(&dialogId)
+	err := trx.QueryRow(ctx, "INSERT INTO dialogs VALUES(DEFAULT) RETURNING id;").Scan(&dialogId)
+	if err != nil {
+		return 0, err
+	}
 
-	_, err := trx.CopyFrom(
+	_, err = trx.CopyFrom(
 		ctx,
 		pgx.Identifier{"user_dialogs"},
 		[]string{"user_id", "dialog_id"},

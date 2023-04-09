@@ -22,7 +22,6 @@ type Client struct {
 	connection *websocket.Conn
 	user       *domain.User
 	manager    *Manager
-	chatroom   string
 	egress     chan WsEvent // is used to avoid concurrent writes on the WebSocket
 }
 

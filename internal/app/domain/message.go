@@ -27,7 +27,7 @@ func (m *Message) ScanRow(row pgx.Row) error {
 }
 
 type MessageService interface {
-	SendMessage(ctx context.Context, dto *dto.SendMessageRequest) (*Message, error)
+	CreateMessage(ctx context.Context, dto *dto.SendMessageRequest) (*Message, error)
 }
 
 type MessageRepository interface {

@@ -1,4 +1,5 @@
 //go:build exclude
+
 package main
 
 import (
@@ -67,7 +68,7 @@ func main() {
 			return
 		case t := <-ticker.C:
 			data, _ := json.Marshal(map[string]interface{}{
-				"message": fmt.Sprintf("Hello from [%d]: %s", *receiver, t.String()),
+				"message":  fmt.Sprintf("Hello from [%d]: %s", *receiver, t.String()),
 				"receiver": receiver,
 			})
 

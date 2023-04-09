@@ -18,6 +18,6 @@ func NewMessageService(store *repository.Store, config config.Config) domain.Mes
 	return &messageService{store, config}
 }
 
-func (ms *messageService) SendMessage(ctx context.Context, dto *dto.SendMessageRequest) (*domain.Message, error) {
+func (ms *messageService) CreateMessage(ctx context.Context, dto *dto.SendMessageRequest) (*domain.Message, error) {
 	return ms.store.Message.CreateMessage(ctx, dto)
 }
