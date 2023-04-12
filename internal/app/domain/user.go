@@ -24,7 +24,7 @@ type UserService interface {
 	Update(ctx context.Context, userId int, dto *dto.UserUpdateRequest) (*User, error)
 	Delete(ctx context.Context, userId int) error
 	FindById(ctx context.Context, id int) (*User, error)
-	FindAll(ctx context.Context, searchQuery dto.UserSearchQuery) (*dto.SearchResponse, error)
+	FindAll(ctx context.Context, searchQuery dto.UserSearchQuery) (*dto.PageResponse, error)
 }
 
 type UserRepository interface {

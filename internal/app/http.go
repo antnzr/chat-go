@@ -107,6 +107,7 @@ func (s *HttpServer) setupRoutes(ctx context.Context, engine *gin.Engine) {
 		chats := v1.Group("/chats")
 		{
 			chats.GET("/", m_auth, chatController.GetMyChats)
+			chats.GET("/:chatId/messages", m_auth, chatController.GetChatMessages)
 		}
 	}
 

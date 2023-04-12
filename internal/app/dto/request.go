@@ -57,3 +57,22 @@ type SendMessageRequest struct {
 	TargetUserId int
 	Text         string
 }
+
+type FindMessagesRequest struct {
+	Limit         int          `form:"limit,default=20"`
+	SortOrder     string       `form:"sortOrder,default=desc"`
+	Cursor        string       `form:"cursor"`
+	UserId        int          `json:"-"`
+	ChatId        int          `json:"-"`
+	DecodedCursor utils.Cursor `json:"-"`
+}
+
+func (fm *FindMessagesRequest) Validate() error {
+	if fm.Limit > utils.MAX_LIMIT_PER_PAGE {
+		return errs.LimitExceeded
+	}
+	if fm.Limit < 0 {
+		return errs.BadRequest
+	}
+	return nil
+}

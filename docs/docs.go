@@ -158,7 +158,56 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SearchResponse"
+                            "$ref": "#/definitions/dto.PageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
+        "/chats/{chatId}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "JWT": []
+                    }
+                ],
+                "description": "Get chat messages",
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Get chat messages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat Id",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit per page default 20",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cursor on previous or nest result set",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CursorResponse"
                         }
                     },
                     "401": {
@@ -206,7 +255,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SearchResponse"
+                            "$ref": "#/definitions/dto.PageResponse"
                         }
                     },
                     "400": {
@@ -356,6 +405,24 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.CursorResponse": {
+            "type": "object",
+            "properties": {
+                "docs": {
+                    "type": "array",
+                    "items": {}
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "nextCursor": {
+                    "type": "string"
+                },
+                "prevCursor": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.LoginRequest": {
             "type": "object",
             "required": [
@@ -379,7 +446,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.SearchResponse": {
+        "dto.PageResponse": {
             "type": "object",
             "properties": {
                 "docs": {

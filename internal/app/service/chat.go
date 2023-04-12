@@ -6,6 +6,7 @@ import (
 	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
+	"github.com/antnzr/chat-go/internal/app/errs"
 	"github.com/antnzr/chat-go/internal/app/repository"
 	"github.com/antnzr/chat-go/internal/app/utils"
 )
@@ -23,20 +24,92 @@ func (cs *chatService) CreateMessage(ctx context.Context, dto *dto.SendMessageRe
 	return cs.store.Chat.CreateMessage(ctx, dto)
 }
 
-func (cs *chatService) FindMyChats(ctx context.Context, searchQuery dto.ChatSearchQuery) (*dto.SearchResponse, error) {
-	response := dto.SearchResponse{
-		Page:  searchQuery.Page,
-		Limit: searchQuery.Limit,
-	}
-
-	total, users, err := cs.store.Chat.FindChats(ctx, searchQuery)
+func (cs *chatService) FindMyChats(ctx context.Context, searchQuery dto.ChatSearchQuery) (*dto.PageResponse, error) {
+	total, docs, err := cs.store.Chat.FindChats(ctx, searchQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	response.Total = total
-	response.Docs = utils.ToSliceOfAny(users)
-	response.TotalPages = utils.PageCount(total, searchQuery.Limit)
+	res := new(dto.PageResponse)
+	res.Total = total
+	res.TotalPages = utils.PageCount(total, searchQuery.Limit)
+	res.Page = searchQuery.Page
+	res.Limit = searchQuery.Limit
+	res.Docs = utils.ToSliceOfAny(docs)
 
-	return &response, nil
+	return res, nil
+}
+
+func (cs *chatService) FindChatMessages(ctx context.Context, query *dto.FindMessagesRequest) (*dto.CursorResponse, error) {
+	isFirstPage := query.Cursor == ""
+	isPointNext := false
+
+	if query.Cursor != "" {
+		decodedCursor, err := utils.DecodeCursor(query.Cursor)
+		if err != nil {
+			return nil, errs.BadRequest
+		}
+		isPointNext = decodedCursor.IsPointNext
+		query.DecodedCursor = *decodedCursor
+	}
+
+	messages, err := cs.store.Chat.FindChatMessages(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	hasMore := len(messages) > int(query.Limit)
+	if hasMore {
+		messages = messages[:query.Limit]
+	}
+	if !isFirstPage && !isPointNext {
+		messages = utils.Reverse(messages)
+	}
+
+	cursors := getCursors(isFirstPage, hasMore, query.Limit, messages, isPointNext)
+
+	res := new(dto.CursorResponse)
+	res.Limit = query.Limit
+	res.Docs = utils.ToSliceOfAny(messages)
+	res.PrevCursor = cursors.PrevCursor
+	res.NextCursor = cursors.NextCursor
+
+	return res, nil
+}
+
+func getCursors(
+	isFirstPage bool,
+	hasMore bool,
+	limit int,
+	messages []dto.MessageResponse,
+	isPointNext bool,
+) *utils.Cursors {
+	nextCur := new(utils.Cursor)
+	prevCur := new(utils.Cursor)
+
+	if isFirstPage {
+		if hasMore {
+			nextCur := utils.NewCursor(messages[limit-1].Id, true)
+			return utils.NewCursors(nextCur, nil)
+		}
+		return nil
+	}
+
+	// if pointing next, it always has prev but it might not have next
+	if isPointNext {
+		if hasMore {
+			nextCur = utils.NewCursor(messages[limit-1].Id, true)
+		}
+		prevCur = utils.NewCursor(messages[0].Id, false)
+		return utils.NewCursors(nextCur, prevCur)
+	}
+
+	if len(messages) > 1 {
+		nextCur = utils.NewCursor(messages[limit-1].Id, true)
+	}
+	if hasMore {
+		prevCur = utils.NewCursor(messages[0].Id, false)
+	}
+
+	return utils.NewCursors(nextCur, prevCur)
 }

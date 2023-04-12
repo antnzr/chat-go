@@ -1,17 +1,29 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type LoginResponse struct {
 	AccessToken string `json:"accessToken"`
 }
 
-type SearchResponse struct {
-	Page       int           `json:"page"`
-	Limit      int           `json:"limit"`
-	Total      int           `json:"total"`
-	TotalPages int           `json:"totalPages"`
-	Docs       []interface{} `json:"docs"`
+type DocsResponse struct {
+	Limit int           `json:"limit"`
+	Docs  []interface{} `json:"docs"`
+}
+
+type PageResponse struct {
+	DocsResponse
+	Page       int `json:"page"`
+	Total      int `json:"total"`
+	TotalPages int `json:"totalPages"`
+}
+
+type CursorResponse struct {
+	DocsResponse
+	PrevCursor string `json:"prevCursor"`
+	NextCursor string `json:"nextCursor"`
 }
 
 type UserResponse struct {

@@ -115,7 +115,7 @@ func (uc *userController) DeleteUser(ctx *gin.Context) {
 // @Param limit query int  		false  "Limit per page"
 // @Param page  query int  		false  "Page number"
 // @Param email query string  false  "Search by email"
-// @Success 200 {object} dto.SearchResponse
+// @Success 200 {object} dto.PageResponse
 // @Failure 400
 // @Failure 401
 // @Failure 403

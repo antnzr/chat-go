@@ -1,4 +1,16 @@
 definitions:
+  dto.CursorResponse:
+    properties:
+      docs:
+        items: {}
+        type: array
+      limit:
+        type: integer
+      nextCursor:
+        type: string
+      prevCursor:
+        type: string
+    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -14,7 +26,7 @@ definitions:
       accessToken:
         type: string
     type: object
-  dto.SearchResponse:
+  dto.PageResponse:
     properties:
       docs:
         items: {}
@@ -155,7 +167,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.SearchResponse'
+            $ref: '#/definitions/dto.PageResponse'
         "401":
           description: Unauthorized
         "403":
@@ -163,6 +175,37 @@ paths:
       security:
       - JWT: []
       summary: Get my chats
+      tags:
+      - Chat
+  /chats/{chatId}/messages:
+    get:
+      description: Get chat messages
+      parameters:
+      - description: Chat Id
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Limit per page default 20
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor on previous or nest result set
+        in: query
+        name: cursor
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CursorResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+      - JWT: []
+      summary: Get chat messages
       tags:
       - Chat
   /users:
@@ -201,7 +244,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.SearchResponse'
+            $ref: '#/definitions/dto.PageResponse'
         "400":
           description: Bad Request
         "401":

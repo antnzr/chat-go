@@ -1,18 +1,19 @@
 ## The App
 
-| RESOURCE | HTTP METHOD | ROUTE                | DESCRIPTION              |
-| -------- | ----------- | -------------------- | ------------------------ |
-| auth     | POST        | /api/v1/auth/signup  | Register a new user      |
-| auth     | POST        | /api/v1/auth/login   | Login user               |
-| auth     | GET         | /api/v1/auth/refresh | Request a new token pair |
-| auth     | GET         | /api/v1/auth/logout  | Logout user              |
-| users    | GET         | /api/v1/users/me     | Get me                   |
-| users    | GET         | /api/v1/users/:id    | Find user by id          |
-| users    | GET         | /api/v1/users        | Find users               |
-| users    | PATCH       | /api/v1/users        | Update user              |
-| users    | DELETE      | /api/v1/users        | Delete user              |
-| chats    | GET         | /api/v1/chats        | Find my chats            |
-|          |             | /swagger/index.html  | Api docs                 |
+| RESOURCE | HTTP METHOD | ROUTE                          | DESCRIPTION              |
+| -------- | ----------- | ------------------------------ | ------------------------ |
+| auth     | POST        | /api/v1/auth/signup            | Register a new user      |
+| auth     | POST        | /api/v1/auth/login             | Login user               |
+| auth     | GET         | /api/v1/auth/refresh           | Request a new token pair |
+| auth     | GET         | /api/v1/auth/logout            | Logout user              |
+| users    | GET         | /api/v1/users/me               | Get me                   |
+| users    | GET         | /api/v1/users/:id              | Find user by id          |
+| users    | GET         | /api/v1/users                  | Find users               |
+| users    | PATCH       | /api/v1/users                  | Update user              |
+| users    | DELETE      | /api/v1/users                  | Delete user              |
+| chats    | GET         | /api/v1/chats                  | Find my chats            |
+| chats    | GET         | /api/v1/chats/:chatId/messages | Find chat's messages     |
+|          |             | /swagger/index.html            | Api docs                 |
 
 #### TOOLS:
 

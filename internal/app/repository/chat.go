@@ -9,6 +9,7 @@ import (
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
+	"github.com/antnzr/chat-go/internal/app/utils"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -200,7 +201,7 @@ func (cr *chatRepository) FindChats(
 	}
 	defer rows.Close()
 
-	chats, err := scan(rows)
+	chats, err := scanChats(rows)
 	if err != nil {
 		return 0, nil, errs.ClarifyError(err)
 	}
@@ -208,10 +209,82 @@ func (cr *chatRepository) FindChats(
 	return total, chats, nil
 }
 
-func scan(rows pgx.Rows) ([]dto.ChatResponse, error) {
+func (cr *chatRepository) FindChatMessages(
+	ctx context.Context,
+	query *dto.FindMessagesRequest,
+) ([]dto.MessageResponse, error) {
+	args := pgx.NamedArgs{
+		"userId": query.UserId,
+		"chatId": query.ChatId,
+		"limit":  query.Limit + 1,
+	}
+
+	sql := `
+		SELECT m.id, m.owner_id, m.text, m.chat_id, m.created_at
+		FROM messages AS m
+		JOIN user_chats AS uc
+			ON m.chat_id = uc.chat_id
+		WHERE uc.user_id = @userId AND uc.chat_id = @chatId
+	`
+
+	if query.DecodedCursor.Id != 0 {
+		operator, order := utils.GetPaginationOperator(query.DecodedCursor.IsPointNext, query.SortOrder)
+		args["messageId"] = query.DecodedCursor.Id
+		sql += fmt.Sprintf(" AND m.id %s @messageId", operator)
+
+		if order != "" {
+			query.SortOrder = order
+		}
+	}
+
+	sql += fmt.Sprintf(" ORDER BY id %s", query.SortOrder)
+	sql += fmt.Sprintf(" LIMIT @limit;")
+
+	rows, err := cr.DB.Query(ctx, sql, args)
+	if err != nil {
+		return nil, errs.ClarifyError(err)
+	}
+	defer rows.Close()
+
+	messages, err := scanMessages(rows)
+	if err != nil {
+		return nil, errs.ClarifyError(err)
+	}
+
+	return messages, nil
+}
+
+func scanMessages(rows pgx.Rows) ([]dto.MessageResponse, error) {
+	var messages []dto.MessageResponse
+	for rows.Next() {
+		message, err := scanMessageRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, *message)
+	}
+	return messages, nil
+}
+
+func scanMessageRow(rows pgx.Rows) (*dto.MessageResponse, error) {
+	var msg dto.MessageResponse
+	err := rows.Scan(
+		&msg.Id,
+		&msg.OwnerId,
+		&msg.Text,
+		&msg.ChatId,
+		&msg.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &msg, nil
+}
+
+func scanChats(rows pgx.Rows) ([]dto.ChatResponse, error) {
 	var chats []dto.ChatResponse
 	for rows.Next() {
-		chat, err := scanRowsIntoChat(rows)
+		chat, err := scanChatRows(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +293,7 @@ func scan(rows pgx.Rows) ([]dto.ChatResponse, error) {
 	return chats, nil
 }
 
-func scanRowsIntoChat(rows pgx.Rows) (*dto.ChatResponse, error) {
+func scanChatRows(rows pgx.Rows) (*dto.ChatResponse, error) {
 	chat := new(dto.ChatResponse)
 	chat.LastMessage = new(dto.MessageResponse)
 
