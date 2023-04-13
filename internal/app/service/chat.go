@@ -71,8 +71,10 @@ func (cs *chatService) FindChatMessages(ctx context.Context, query *dto.FindMess
 	res := new(dto.CursorResponse)
 	res.Limit = query.Limit
 	res.Docs = utils.ToSliceOfAny(messages)
-	res.PrevCursor = cursors.PrevCursor
-	res.NextCursor = cursors.NextCursor
+	if cursors != nil {
+		res.PrevCursor = cursors.PrevCursor
+		res.NextCursor = cursors.NextCursor
+	}
 
 	return res, nil
 }
@@ -95,7 +97,6 @@ func getCursors(
 		return nil
 	}
 
-	// if pointing next, it always has prev but it might not have next
 	if isPointNext {
 		if hasMore {
 			nextCur = utils.NewCursor(messages[limit-1].Id, true)
@@ -105,8 +106,9 @@ func getCursors(
 	}
 
 	if len(messages) > 1 {
-		nextCur = utils.NewCursor(messages[limit-1].Id, true)
+		nextCur = utils.NewCursor(messages[len(messages)-1].Id, true)
 	}
+
 	if hasMore {
 		prevCur = utils.NewCursor(messages[0].Id, false)
 	}

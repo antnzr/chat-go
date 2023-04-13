@@ -15,6 +15,7 @@ var testDbInstance *pgxpool.Pool
 var userSrvc domain.UserService
 var chatSrvc domain.ChatService
 var conf config.Config
+var testStore *repository.Store
 
 func TestMain(m *testing.M) {
 	var err error
@@ -36,9 +37,9 @@ func buildDeps() {
 	userRepository := repository.NewUserRepository(testDbInstance)
 	tokenRepository := repository.NewTokneRepository(testDbInstance)
 	chatRepository := repository.NewChatRepository(testDbInstance)
-	store := repository.NewStore(userRepository, tokenRepository, chatRepository)
+	testStore = repository.NewStore(userRepository, tokenRepository, chatRepository)
 
-	tokenService := NewTokenService(store, conf)
-	userSrvc = NewUserService(store, conf, tokenService)
-	chatSrvc = NewChatService(store, conf)
+	tokenService := NewTokenService(testStore, conf)
+	userSrvc = NewUserService(testStore, conf, tokenService)
+	chatSrvc = NewChatService(testStore, conf)
 }

@@ -213,6 +213,9 @@ func (cr *chatRepository) FindChatMessages(
 	ctx context.Context,
 	query *dto.FindMessagesRequest,
 ) ([]dto.MessageResponse, error) {
+	if query.SortOrder == "" {
+		query.SortOrder = "desc"
+	}
 	args := pgx.NamedArgs{
 		"userId": query.UserId,
 		"chatId": query.ChatId,
