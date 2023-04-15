@@ -19,6 +19,7 @@
 
 - golang 1.20
 - gin
+- gorilla/websocket
 - postgres, pgx
 - zap logging
 - nginx (local ssl setup with minica)

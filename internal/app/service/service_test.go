@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 func buildDeps() {
 	userRepository := repository.NewUserRepository(testDbInstance)
 	tokenRepository := repository.NewTokneRepository(testDbInstance)
-	chatRepository := repository.NewChatRepository(testDbInstance)
+	chatRepository := repository.NewChatRepository(testDbInstance, conf)
 	testStore = repository.NewStore(userRepository, tokenRepository, chatRepository)
 
 	tokenService := NewTokenService(testStore, conf)

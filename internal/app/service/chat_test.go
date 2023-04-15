@@ -84,7 +84,7 @@ func TestGetChatMessages(t *testing.T) {
 		assert.NotEmpty(t, res.NextCursor)
 	})
 	t.Run("get next chat messages with next cursor", func(t *testing.T) {
-		first, err := chatSrvc.FindChatMessages(ctx, &dto.FindMessagesRequest{
+		first, _ := chatSrvc.FindChatMessages(ctx, &dto.FindMessagesRequest{
 			ChatId: chatId,
 			UserId: user1.Id,
 			Limit:  3,
@@ -132,7 +132,7 @@ func setup(t *testing.T) func(tb testing.TB) {
 
 func makeMessages(t *testing.T) func(tb testing.TB) {
 	userIds := []int{user1.Id, user2.Id}
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	ctx := context.TODO()
 	for i := 1; i <= MESSAGES_COUNT; i++ {
 		rand.Shuffle(len(userIds), func(i, j int) { userIds[i], userIds[j] = userIds[j], userIds[i] })

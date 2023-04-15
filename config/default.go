@@ -29,6 +29,8 @@ type Config struct {
 	RefreshTokenPublicKey  string        `mapstructure:"REFRESH_TOKEN_PUBLIC_KEY"`
 	RefreshTokenExpiresIn  time.Duration `mapstructure:"REFRESH_TOKEN_EXPIRED_IN"`
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
+
+	AesKey string `mapstructure:"AES_KEY"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

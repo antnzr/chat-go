@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/antnzr/chat-go/config"
 	"github.com/antnzr/chat-go/internal/app/domain"
 	"github.com/antnzr/chat-go/internal/app/dto"
 	"github.com/antnzr/chat-go/internal/app/errs"
@@ -15,12 +16,14 @@ import (
 )
 
 type chatRepository struct {
-	DB *pgxpool.Pool
+	DB     *pgxpool.Pool
+	config config.Config
 }
 
-func NewChatRepository(db *pgxpool.Pool) domain.ChatRepository {
+func NewChatRepository(db *pgxpool.Pool, config config.Config) domain.ChatRepository {
 	return &chatRepository{
-		DB: db,
+		DB:     db,
+		config: config,
 	}
 }
 
@@ -120,18 +123,21 @@ func (cr *chatRepository) createMessage(
 	chatId int,
 	text string,
 ) (*domain.Message, error) {
+
+	sql := fmt.Sprintf(`
+		INSERT INTO "messages" (owner_id, chat_id, text)
+		VALUES($1, $2, PGP_SYM_ENCRYPT($3, '%s'))
+		RETURNING id, owner_id, chat_id, text, created_at;
+	`, cr.config.AesKey)
+	row := trx.QueryRow(ctx, sql, ownerId, chatId, text)
+
 	message := new(domain.Message)
-	row := trx.QueryRow(
-		ctx,
-		`INSERT INTO "messages" ("owner_id", "chat_id", "text")
-		VALUES($1, $2, $3)
-		RETURNING "id", "owner_id", "chat_id", "text", "created_at";`,
-		ownerId, chatId, text,
-	)
 	err := message.ScanRow(row)
 	if err != nil {
 		return nil, err
 	}
+
+	message.Text = text
 	return message, nil
 }
 
@@ -177,7 +183,8 @@ func (cr *chatRepository) FindChats(
 
 	sql := fmt.Sprintf(`
 		SELECT c.id, c.name, c.description, c.last_message_id, c.created_at,
-				 m.id AS message_id, m.owner_id AS message_owner, m.text AS message_text,
+				 m.id AS message_id, m.owner_id AS message_owner,
+				 PGP_SYM_DECRYPT(m.text::bytea, '%s') AS message_text,
 				 m.chat_id AS chat_id, m.created_at AS message_created_at
 		FROM user_chats AS uc
 		JOIN chats AS c
@@ -186,7 +193,7 @@ func (cr *chatRepository) FindChats(
 			ON c.last_message_id = m.id
 		%s
 		ORDER BY c.created_at DESC
-	`, where)
+	`, cr.config.AesKey, where)
 
 	args = append(args, searchQuery.Limit)
 	sql += fmt.Sprintf(` LIMIT $%d`, len(args))
@@ -222,13 +229,13 @@ func (cr *chatRepository) FindChatMessages(
 		"limit":  query.Limit + 1,
 	}
 
-	sql := `
-		SELECT m.id, m.owner_id, m.text, m.chat_id, m.created_at
+	sql := fmt.Sprintf(`
+		SELECT m.id, m.owner_id, PGP_SYM_DECRYPT(m.text::bytea, '%s') AS message_text, m.chat_id, m.created_at
 		FROM messages AS m
 		JOIN user_chats AS uc
 			ON m.chat_id = uc.chat_id
 		WHERE uc.user_id = @userId AND uc.chat_id = @chatId
-	`
+	`, cr.config.AesKey)
 
 	if query.DecodedCursor.Id != 0 {
 		operator, order := utils.GetPaginationOperator(query.DecodedCursor.IsPointNext, query.SortOrder)
@@ -241,7 +248,7 @@ func (cr *chatRepository) FindChatMessages(
 	}
 
 	sql += fmt.Sprintf(" ORDER BY id %s", query.SortOrder)
-	sql += fmt.Sprintf(" LIMIT @limit;")
+	sql += " LIMIT @limit;"
 
 	rows, err := cr.DB.Query(ctx, sql, args)
 	if err != nil {
