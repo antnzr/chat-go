@@ -7,7 +7,7 @@ import (
 )
 
 type ChatService interface {
-	CreateMessage(ctx context.Context, dto *dto.SendMessageRequest) (*Message, error)
+	CreateMessage(ctx context.Context, dto *dto.SendMessageRequest) (*dto.MessageResponse, error)
 	FindMyChats(ctx context.Context, searchQuery dto.ChatSearchQuery) (*dto.PageResponse, error)
 	FindChatMessages(ctx context.Context, searchQuery *dto.FindMessagesRequest) (*dto.CursorResponse, error)
 }

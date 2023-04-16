@@ -20,8 +20,21 @@ func NewChatService(store *repository.Store, config config.Config) domain.ChatSe
 	return &chatService{store, config}
 }
 
-func (cs *chatService) CreateMessage(ctx context.Context, dto *dto.SendMessageRequest) (*domain.Message, error) {
-	return cs.store.Chat.CreateMessage(ctx, dto)
+func (cs *chatService) CreateMessage(ctx context.Context, query *dto.SendMessageRequest) (*dto.MessageResponse, error) {
+	msg, err := cs.store.Chat.CreateMessage(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	msgResponse := &dto.MessageResponse{
+		Id:        msg.Id,
+		OwnerId:   msg.OwnerId,
+		Text:      msg.Text,
+		ChatId:    msg.ChatId,
+		CreatedAt: msg.CreatedAt,
+	}
+
+	return msgResponse, nil
 }
 
 func (cs *chatService) FindMyChats(ctx context.Context, searchQuery dto.ChatSearchQuery) (*dto.PageResponse, error) {

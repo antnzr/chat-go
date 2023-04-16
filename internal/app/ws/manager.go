@@ -74,7 +74,7 @@ func (m *Manager) setupWsEventHandlers() {
 	m.handlers[SEND_MESSAGE_EVENT] = SendMessage
 }
 
-func saveMessage(event SendMessageEvent, client *Client) (*domain.Message, error) {
+func saveMessage(event SendMessageEvent, client *Client) (*dto.MessageResponse, error) {
 	result, err := client.manager.container.Service.Chat.CreateMessage(context.TODO(), &dto.SendMessageRequest{
 		SourceUserId: client.user.Id,
 		TargetUserId: event.Receiver,
@@ -103,7 +103,7 @@ func SendMessage(wsEvent WsEvent, client *Client) error {
 		return err
 	}
 
-	data, err := json.Marshal(&NewMessageEvent{Message: *msg})
+	data, err := json.Marshal(&NewMessageEvent{Message: msg})
 	if err != nil {
 		return fmt.Errorf("failed unmarshall data %v\n", err)
 	}

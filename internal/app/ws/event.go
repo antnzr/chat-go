@@ -3,7 +3,7 @@ package ws
 import (
 	"encoding/json"
 
-	"github.com/antnzr/chat-go/internal/app/domain"
+	"github.com/antnzr/chat-go/internal/app/dto"
 )
 
 type WsEvent struct {
@@ -29,5 +29,5 @@ type SendMessageEvent struct {
 }
 
 type NewMessageEvent struct {
-	Message domain.Message `json:"message"`
+	Message *dto.MessageResponse `json:"message"`
 }
