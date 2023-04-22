@@ -1,6 +1,6 @@
 -- migrate:up
 CREATE TABLE IF NOT EXISTS public.messages (
-  id SERIAL PRIMARY KEY,
+  id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   text TEXT,
   owner_id int REFERENCES public.users(id) ON DELETE CASCADE ON UPDATE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.messages (
 CREATE INDEX IF NOT EXISTS owner_message_idx ON public.messages(owner_id);
 
 CREATE TABLE IF NOT EXISTS public.chats (
-  id SERIAL PRIMARY KEY,
+  id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   name VARCHAR(255),
   last_message_id int REFERENCES public.messages(id) ON DELETE CASCADE ON UPDATE CASCADE,
   description TEXT,
@@ -22,7 +22,7 @@ ADD COLUMN chat_id int REFERENCES public.chats (id) ON DELETE CASCADE ON UPDATE 
 CREATE INDEX IF NOT EXISTS chat_message_idx ON public.messages(chat_id);
 
 CREATE TABLE IF NOT EXISTS public.user_chats (
-  id SERIAL PRIMARY KEY,
+  id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   user_id int NOT NULL REFERENCES public.users(id) ON DELETE SET NULL ON UPDATE CASCADE,
   chat_id int NOT NULL REFERENCES public.chats (id) ON DELETE CASCADE ON UPDATE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
